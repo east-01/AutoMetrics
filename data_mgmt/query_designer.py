@@ -29,7 +29,7 @@ def build_query_url(start, end, type_string):
     """
     prog_data = ProgramData()
     base_url = prog_data.config["base_url"]
-    query_string = prog_data.config["query"].replace(prog_data.settings.type_string_identifier, type_string)
+    query_string = prog_data.config["query"].replace(prog_data.settings['type_string_identifier'], type_string)
 
     return build_url(base_url, {
         "start": start,
@@ -47,16 +47,24 @@ def build_query_list():
 
     prog_data = ProgramData()
     args = prog_data.args
+    analysis_options = prog_data.settings['analysis_options']
 
-    type_string = prog_data.settings.type_strings[args.type]
-    query_url = build_query_url(args.period[0], args.period[1], type_string)
-    query_block = {
-        'query': query_url,
-        'type': args.type,
-        'period': args.period
-    }
-    
-    return [query_block]
+    required_types = set()
+    for analysis in analysis_options:
+        for type in analysis_options[analysis]['types']:
+            required_types.add(type)
+
+    query_list = []
+    for type in required_types:
+        type_string = prog_data.settings['type_strings'][type]
+        query_url = build_query_url(args.period[0], args.period[1], type_string)
+        query_list.append({
+            'query': query_url,
+            'type': type,
+            'period': args.period
+        })
+
+    return query_list
 
 def get_query_block_string(query_block):
     """

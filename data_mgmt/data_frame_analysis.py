@@ -44,7 +44,7 @@ def analyze_df_type(col_datas):
     type = None
     
     # Find the program type by finding the dictionary key from its value
-    type_strings = ProgramData().settings.type_strings
+    type_strings = ProgramData().settings['type_strings']
     for possible_type in type_strings.keys():
         if(type_strings[possible_type] == type_string):
             type = possible_type

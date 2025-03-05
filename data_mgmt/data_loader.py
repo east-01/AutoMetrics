@@ -43,10 +43,6 @@ def load_data():
 
     else:
 
-        if(args.type == 'uniquens'):
-            print("ERROR: Haven't handled uniquens case in load_data yet")
-            exit(1)
-
         query_blocks = build_query_list()
         print(f"Loading data from {len(query_blocks)} query/queries:")
 

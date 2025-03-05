@@ -26,9 +26,9 @@ Analysis options must be spelled correctly and listed without spaces. Here is an
 ```
 python tidemetrics.py gpuhours,uniquens
 ```
-You can use the `*` symbol to denote all analysis options, so if you wanted to collect analyses for all of the following options you would do:
+You can use `all` to denote all analysis options, so if you wanted to collect analyses for all of the following options you would do:
 ```
-python tidemetrics.py *
+python tidemetrics.py all
 ```
 
 Option | Description
@@ -83,7 +83,7 @@ There are a couple data structures to keep in mind to understand how this progra
 The ProgramData class is a singleton object that holds *all* of the data that is used throughout the lifecycle of the program. The list of things inside ProgramData:
 - Command line arguments (argparse.Namespace)
 - config.yaml values (Dictionary)
-- Settings (argparse.Namespace- hard-coded values that shouldn't be mutable by the user)
+- Settings (Dictionary- hard-coded values that shouldn't be mutable by the user)
 - __DataRepository__ (DataRepository class)
 - __Analysis repository__ (Dictionary)
 

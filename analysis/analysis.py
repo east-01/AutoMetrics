@@ -1,27 +1,12 @@
 from program_data import ProgramData
 from analysis.analysis_impl import analyze_hours_byns, analyze_jobs, analyze_cpu_only_jobs, analyze_unique_ns
 
-analysis_options = {
-    "cpuhours": {
-        "types": ["cpu"],
-        "method": analyze_hours_byns
-    },
-    "cpujobs": {
-        "types": ["cpu", "gpu"],
-        "method": analyze_cpu_only_jobs
-    },
-    "gpuhours": {
-        "types": ["gpu"],
-        "method": analyze_hours_byns
-    },
-    "gpujobs": {
-        "types": ["gpu"],
-        "method": analyze_jobs
-    },
-    "uniquens": {
-        "types": ["cpu", "gpu"],
-        "method": analyze_unique_ns
-    }
+analysis_options_methods = {
+    "cpuhours": analyze_hours_byns,
+    "cpujobs": analyze_cpu_only_jobs,
+    "gpuhours": analyze_hours_byns,
+    "gpujobs": analyze_jobs,
+    "uniquens": analyze_unique_ns
 }
 
 def analyze():
@@ -35,6 +20,11 @@ def analyze():
       use them.
     """
     prog_data = ProgramData()
+    analysis_options = prog_data.settings['analysis_options']
+    # Populate analysis implementation methods
+    for analysis_key in analysis_options_methods.keys():
+        analysis_options[analysis_key]["method"] = analysis_options_methods[analysis_key]
+
     prog_data.analysis_repo = {}
     # TODO: This is selecting the ALL keys from the analysis dict, this should be a command line argument. 
     analyses_to_perform = set(analysis_options.keys())

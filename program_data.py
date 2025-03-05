@@ -22,16 +22,40 @@ class ProgramData(metaclass=SingletonMeta):
     def __init__(self):
         
         # Settings are truths about the program that shouldn't be mutable by the user
-        self.settings = argparse.Namespace(
-            type_options=['cpu', 'gpu', 'uniquens'],
+        self.settings = {
+            "type_options": ["cpu", "gpu"],
             # A dictionary mapping a type option to the type that it appears as in the query
-            type_strings={
-                'cpu': 'cpu',
-                'gpu': 'nvidia_com_gpu'
+            "type_strings": {
+                "cpu": "cpu",
+                "gpu": "nvidia_com_gpu"
             },
             # The string in the query to be replaced with whatever type of data we're retrieving
-            type_string_identifier="%TYPE_STRING%"
-        )
+            "type_string_identifier": "%TYPE_STRING%",
+            # Analysis options, the types are the required types to perform the analysis.
+            # Methods are filled out by analysis.py on the analysis() call
+            "analysis_options": {
+                "cpuhours": {
+                    "types": ["cpu"],
+                    "method": None
+                },
+                "cpujobs": {
+                    "types": ["cpu", "gpu"],
+                    "method": None
+                },
+                "gpuhours": {
+                    "types": ["gpu"],
+                    "method": None
+                },
+                "gpujobs": {
+                    "types": ["gpu"],
+                    "method": None
+                },
+                "uniquens": {
+                    "types": ["cpu", "gpu"],
+                    "method": None
+                }
+            }
+        }
 
         self.load_arguments()
         self.verify_arguments()
@@ -75,16 +99,25 @@ class ProgramData(metaclass=SingletonMeta):
             
             return (int(time_range_arr[0]), int(time_range_arr[1]))
 
+        def parse_analysis_options(analysis_options_str):
+            if(analysis_options_str == "all"):
+                return list(self.settings['analysis_options'].keys())
+
+            options = analysis_options_str.split(",")
+            for option in options:
+                if(option not in self.settings['analysis_options'].keys()):
+                    print(f"Failed to parse analysis option list, \"{option}\" is not recognized as a valid option.")
+                    raise ValueError()
+            return options
+
         parser = argparse.ArgumentParser(prog='AutoTM', description='Auto Tide Metrics- Collect and visualize tide metrics')
 
-        # Required arguments, these will be populated if defaults arent provided
-        # We could use default=__ here, but I want to be able to provide warnings below if necessary
-        parser.add_argument('-t', '--type', dest='type', type=str, help='The type of poll to perform')
+        # These arguments will be populated if defaults arent provided
+        # We could use default=__ here, but I want to be able to provide warnings in verify_arguments if necessary.
+        parser.add_argument('analysis_options', type=parse_analysis_options, help="A list of analysis options separated by a comma (no spaces).")
         parser.add_argument('-p', '--period', dest='period', type=parse_time_range, help="A time range of the format <start>-<end> where your start and end times are UNIX timestamps.")
 
         parser.add_argument('-f', '--file', dest='file', type=str, help='A local file to be used instead of polling Prometheus.')
-
-        # Optional arguments
         parser.add_argument('-o', '--outdir', dest='outdir', type=str, help='The directory to send output files to.')
         # TODO: Input directory
         parser.add_argument('-v', dest='verbose', action='store_true', help="Enable verbose output.")
@@ -94,37 +127,16 @@ class ProgramData(metaclass=SingletonMeta):
     def verify_arguments(self):
         args = self.args
 
-        warnings = []
-        errors = []
-
         if(args.file is not None):
             # If the file exists, provide warnings about other arguments that won't be used
-            if(args.type is not None or args.period is not None):
-                warnings.append("Warning: You provided at least one argument [type/period] that is overridden by the --file flag. You may see a different output than what you we're expecting.")
+            if(args.period is not None):
+                print("Warning: You provided at least one argument [type/period] that is overridden by the --file flag. You may see a different output than what you we're expecting.")
         else:
-            # Populate default arguments
-            if(args.type is None):
-                args.type = "gpu"
-                warnings.append(f"Populating type argument with default \"{args.type}\"")
             if(args.period is None):
                 # Gets current UNIX timestamp as an integer
                 now = int(time.time())
                 args.period = (now-60*60, now)
-                warnings.append(f"Populating time period argument with default \"{args.period}\"")
-
-        if(args.type not in self.settings.type_options):
-            errors.append(f"The data type \"{args.type}\" is not valid. Options: {self.settings.type_options}")
-
-        # Print warnings/errors and exit if necessary
-        for warning in warnings:
-            print(warning)
-
-        if(len(errors) > 0):
-            print(f"{len(errors)} error(s) with arguments:")
-            for error in errors:
-                print(f" - {error}")
-            print("Exiting...")
-            exit(1)
+                print(f"Populating time period argument with default \"{args.period}\"")
 
     def load_config(self):
         config_file = "./config.yaml"
@@ -167,8 +179,8 @@ class ProgramData(metaclass=SingletonMeta):
                 print(f"Failed to load configuration. Key \"{key_to_check}\" either doesn't exist in config or has no value. Exiting.")
                 exit(1)
 
-        if(self.settings.type_string_identifier not in self.config["query"]):
-            print(f"The query (as specified in the configuration) doesn't have the type string identifier \"{self.settings.type_string_identifier}\" in it. Exiting.")
+        if(self.settings['type_string_identifier'] not in self.config["query"]):
+            print(f"The query (as specified in the configuration) doesn't have the type string identifier \"{self.settings['type_string_identifier']}\" in it. Exiting.")
             exit(1)
 
         return
