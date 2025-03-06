@@ -8,7 +8,7 @@ import pandas as pd
 # pip install pyyaml
 import yaml
 
-from timeutils import get_range_printable
+from utils.timeutils import get_range_printable
 
 class SingletonMeta(type):
     _instances = {}

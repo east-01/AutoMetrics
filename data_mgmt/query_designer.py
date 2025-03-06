@@ -3,8 +3,8 @@ import json
 import pandas as pd
 import requests
 
-from program_data import ProgramData
-from timeutils import get_range_printable
+from program_data.program_data import ProgramData
+from utils.timeutils import get_range_printable
 
 def build_url(base, url_options = {}):
     """

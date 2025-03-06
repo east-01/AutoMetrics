@@ -3,7 +3,7 @@ import json
 import pandas as pd
 import requests
 
-from timeutils import from_unix_ts
+from utils.timeutils import from_unix_ts
 
 def perform_query(queryURL):
     """

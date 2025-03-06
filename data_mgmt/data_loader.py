@@ -8,11 +8,11 @@
 import pandas as pd
 import datetime
 
-from program_data import ProgramData
+from program_data.program_data import ProgramData
 from data_mgmt.data_frame_analysis import extract_column_data, analyze_df_type, analyze_df_period
 from data_mgmt.query_executor import perform_query
 from data_mgmt.query_designer import build_query_list, get_query_block_string
-from timeutils import get_range_printable
+from utils.timeutils import get_range_printable
 
 def load_data():
     """

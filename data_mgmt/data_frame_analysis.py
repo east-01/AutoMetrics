@@ -1,8 +1,8 @@
 import datetime
 import calendar
 
-from program_data import ProgramData
-from timeutils import to_unix_ts
+from program_data.program_data import ProgramData
+from utils.timeutils import to_unix_ts
 
 def extract_column_data(col_name):
     """

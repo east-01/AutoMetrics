@@ -4,9 +4,10 @@
 
 import pandas as pd
 
-from program_data import ProgramData
+from program_data.program_data import ProgramData
 from analysis.data_cleaning import clear_duplicate_uids, clear_blacklisted_uids
 
+#region Hours
 def analyze_hours_byns(data_block):
     df = data_block['data']
 
@@ -39,7 +40,9 @@ def analyze_hours_total(data_block):
     hours_df = analysis_repo[identifier][f"{data_block['type']}hours"]
 
     return hours_df['Hours'].sum()
+#endregion
 
+#region Jobs
 def _analyze_jobs_final(df):
     # Create a data frame where the columns 
     greater_than_zero_columns = [col for col in df.columns[1:] if df[col].sum() > 0]
@@ -49,7 +52,7 @@ def _analyze_jobs_final(df):
     #extract all the namespaces and use them as columns, group and summing the values 
     columns = df.columns[1:].str.extract(r'namespace="([^"]+)"')[0]
 
-    namespace_counts_sorted = pd.DataFrame(columns.value_counts().sort_values(ascending=True)).reset_index()
+    namespace_counts_sorted = pd.DataFrame(columns.value_counts().sort_values(ascending=False)).reset_index()
     namespace_counts_sorted.columns = ["Namespace", "Count"]
 
     return namespace_counts_sorted
@@ -74,6 +77,24 @@ def analyze_cpu_only_jobs(data_block):
     df = clear_duplicate_uids(df)
     return _analyze_jobs_final(df)
 
+def analyze_jobs_total(data_block):
+    # Retrieve the corresponding analysis thats already been performed
+    analysis_repo = ProgramData().analysis_repo
+    identifier = (data_block['period'], data_block['type'])
+    jobs_df = analysis_repo[identifier][f"{data_block['type']}jobs"]
+
+    return jobs_df['Count'].sum()
+
+def analyze_all_jobs_total(data_block):
+    # Retrieve the corresponding analysis thats already been performed
+    analysis_repo = ProgramData().analysis_repo
+    cpu_jobs_tot = analysis_repo[(data_block['period'], 'cpu')][f"cpujobstotal"]
+    gpu_jobs_tot = analysis_repo[(data_block['period'], 'gpu')][f"gpujobstotal"]
+
+    return cpu_jobs_tot + gpu_jobs_tot
+#endregion
+
+#region Unique NS
 def analyze_unique_ns(data_block):
     # Unique namespace analysis is performed on the cpu type (see analysis_options['types'], cpu is first)
     gpu_identifier = (data_block['period'], "gpu")
@@ -92,3 +113,12 @@ def analyze_unique_ns(data_block):
     print(unique_ns)
 
     return sorted(unique_ns)
+
+def analyze_unique_ns_count(data_block):
+    # Retrieve the corresponding analysis thats already been performed
+    analysis_repo = ProgramData().analysis_repo
+    identifier = (data_block['period'], data_block['type'])
+    ns_list = analysis_repo[identifier]["uniquenslist"]
+
+    return len(ns_list)
+#endregion

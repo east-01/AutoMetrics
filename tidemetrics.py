@@ -1,8 +1,8 @@
 import os
 
-from analysis import data_cleaning
-from data_mgmt import data_frame_analysis, data_loader
-from program_data import ProgramData
+from program_data.program_data import ProgramData
+from program_data.saver import save
+from data_mgmt.data_loader import load_data
 from analysis.analysis import analyze
 import pandas as pd
 
@@ -12,10 +12,10 @@ pd.set_option('future.no_silent_downcasting', True)
 prog_data = ProgramData()
 
 # Load DataFrames
-data_loader.load_data()
+load_data()
 
 # Analyze dataframes
 analyze()
 
 # Save output data
-prog_data.save()
+save(prog_data)

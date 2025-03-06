@@ -1,14 +1,18 @@
-from program_data import ProgramData
-from analysis.analysis_impl import analyze_hours_byns, analyze_hours_total, analyze_jobs, analyze_cpu_only_jobs, analyze_unique_ns
+from program_data.program_data import ProgramData
+from analysis.analysis_impl import analyze_hours_byns, analyze_hours_total, analyze_jobs, analyze_jobs_total, analyze_cpu_only_jobs, analyze_unique_ns, analyze_unique_ns_count, analyze_all_jobs_total
 
 analysis_options_methods = {
     "cpuhours": analyze_hours_byns,
     "cpuhourstotal": analyze_hours_total,
     "cpujobs": analyze_cpu_only_jobs,
+    "cpujobstotal": analyze_jobs_total,
     "gpuhours": analyze_hours_byns,
     "gpuhourstotal": analyze_hours_total,
     "gpujobs": analyze_jobs,
-    "uniquens": analyze_unique_ns
+    "gpujobstotal": analyze_jobs_total,
+    "uniquenslist": analyze_unique_ns,
+    "uniquens": analyze_unique_ns_count,
+    "jobstotal": analyze_all_jobs_total
 }
 
 def analyze():
@@ -59,19 +63,25 @@ def get_analysis_order():
     Given the list of analyses to perform, re-order it such that analyses with dependencies are
       performed last.
     """
-    nodeps = []
-    yesdeps = []
+    order = []
 
     prog_data = ProgramData()
     user_analysis_options = set(prog_data.args.analysis_options)
     analysis_options = prog_data.settings['analysis_options']
 
-    for analysis_key in user_analysis_options:
-        if(len(analysis_options[analysis_key]["requires"]) > 0):
-            yesdeps.append(analysis_key)
-        else:
-            nodeps.append(analysis_key)
+    # Only iterate n**2 times, any further iterations would mean there is an impossible/circular dependency
+    for _ in range(0, len(analysis_options.keys())**2):
+        for analysis_key in list(user_analysis_options):
+            requirements = analysis_options[analysis_key]["requires"]
+            if(all(x in order for x in requirements)):
+                order.append(analysis_key)
+                user_analysis_options.remove(analysis_key)
+            else:
+                print("not all requirements for", analysis_key)
 
-    return nodeps + yesdeps
+    if(len(user_analysis_options) > 0):
+        raise Exception(f"Failed to generate analysis order, could there be a circular/impossible dependency? Remaining analyses: {user_analysis_options}")
+
+    return order
 
 

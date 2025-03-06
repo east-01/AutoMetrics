@@ -1,0 +1,9 @@
+For gpu-January25:
+  gpuhourstotal: 15834.0
+  gpujobstotal: 138
+For cpu-January25:
+  uniquenslist: ['cal-poly-humboldt-microglia', 'cal-poly-humboldt-test01', 'csu-tide-jupyterhub', 'csu-tide-jupyterhub-dev', 'csuf-titans', 'csun-deep-learning', 'csun-edl', 'csusb-ai', 'csusb-hamouda', 'csusb-hpc', 'csusb-hub-dev', 'csusb-jupyterhub', 'csusb-khan', 'csusb-mpi', 'csusb-putman', 'csusb-pycharm', 'csusb-qchen', 'csusb-zhang', 'sdsu-aicenter', 'sdsu-goldberg', 'sdsu-henry-li', 'sdsu-kylekrick', 'sdsu-llm', 'sdsu-lpcdrp', 'sdsu-mikefarley', 'sdsu-rci-jh', 'sdsu-rci-jh-dev', 'sdsu-shen-climate-lab', 'sdsu-smile', 'sdsu-tend-lab']
+  uniquens: 30
+  cpuhourstotal: 170417.10000000003
+  cpujobstotal: 105
+  jobstotal: 243
