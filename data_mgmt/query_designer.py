@@ -50,7 +50,7 @@ def build_query_list():
     analysis_options = prog_data.settings['analysis_options']
 
     required_types = set()
-    for analysis in analysis_options:
+    for analysis in args.analysis_options:
         for type in analysis_options[analysis]['types']:
             required_types.add(type)
 

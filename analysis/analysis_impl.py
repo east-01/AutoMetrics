@@ -32,6 +32,14 @@ def analyze_hours_byns(data_block):
 
     return namespace_totals_df
 
+def analyze_hours_total(data_block):
+    # Retrieve the corresponding analysis thats already been performed
+    analysis_repo = ProgramData().analysis_repo
+    identifier = (data_block['period'], data_block['type'])
+    hours_df = analysis_repo[identifier][f"{data_block['type']}hours"]
+
+    return hours_df['Hours'].sum()
+
 def _analyze_jobs_final(df):
     # Create a data frame where the columns 
     greater_than_zero_columns = [col for col in df.columns[1:] if df[col].sum() > 0]
@@ -67,4 +75,20 @@ def analyze_cpu_only_jobs(data_block):
     return _analyze_jobs_final(df)
 
 def analyze_unique_ns(data_block):
-    return
+    # Unique namespace analysis is performed on the cpu type (see analysis_options['types'], cpu is first)
+    gpu_identifier = (data_block['period'], "gpu")
+    gpu_data_block = ProgramData().data_repo.data_blocks[gpu_identifier]
+
+    if(gpu_data_block is None):
+        raise Exception("Failed to analyze unique namespaces, the corresponding gpu data_block could not be found.")
+
+    cpu_df = data_block['data']
+    gpu_df = gpu_data_block['data']
+
+    cpu_namespaces = set(cpu_df.columns[1:].str.extract(r'namespace="([^"]+)"')[0])
+    gpu_namespaces = set(gpu_df.columns[1:].str.extract(r'namespace="([^"]+)"')[0])
+
+    unique_ns = list(cpu_namespaces | gpu_namespaces)
+    print(unique_ns)
+
+    return sorted(unique_ns)

@@ -1,10 +1,12 @@
 from program_data import ProgramData
-from analysis.analysis_impl import analyze_hours_byns, analyze_jobs, analyze_cpu_only_jobs, analyze_unique_ns
+from analysis.analysis_impl import analyze_hours_byns, analyze_hours_total, analyze_jobs, analyze_cpu_only_jobs, analyze_unique_ns
 
 analysis_options_methods = {
     "cpuhours": analyze_hours_byns,
+    "cpuhourstotal": analyze_hours_total,
     "cpujobs": analyze_cpu_only_jobs,
     "gpuhours": analyze_hours_byns,
+    "gpuhourstotal": analyze_hours_total,
     "gpujobs": analyze_jobs,
     "uniquens": analyze_unique_ns
 }
@@ -20,34 +22,56 @@ def analyze():
       use them.
     """
     prog_data = ProgramData()
+
     analysis_options = prog_data.settings['analysis_options']
-    # Populate analysis implementation methods
+    # Populate analysis implementation methods (we have cyclical referencing if the methods are placed in program_data.py)
     for analysis_key in analysis_options_methods.keys():
         analysis_options[analysis_key]["method"] = analysis_options_methods[analysis_key]
 
     prog_data.analysis_repo = {}
-    # TODO: This is selecting the ALL keys from the analysis dict, this should be a command line argument. 
-    analyses_to_perform = set(analysis_options.keys())
+    analyses_to_perform = get_analysis_order()
+
+    print(f"Analysis perform order: {", ".join(analyses_to_perform)}")
+
     fulfilled_analyses = set()
 
     data_blocks = prog_data.data_repo.data_blocks
     for data_block_identifier in data_blocks.keys():
         data_block = data_blocks[data_block_identifier]
-        # The analysis results for this data_block only
-        results = {}
 
         for analysis in analyses_to_perform:
             analysis_impl = analysis_options[analysis]
             if(not data_block['type'] == analysis_impl['types'][0]):
                 continue
 
-            results[analysis] = analysis_impl['method'](data_block)
+            if(data_block_identifier not in prog_data.analysis_repo.keys()):
+                prog_data.analysis_repo[data_block_identifier] = {}
+
+            prog_data.analysis_repo[data_block_identifier][analysis] = analysis_impl['method'](data_block)
             fulfilled_analyses.add(analysis)
 
-        prog_data.analysis_repo[data_block_identifier] = results
+    analyses_to_perform_set = set(analyses_to_perform)
+    if(analyses_to_perform_set != fulfilled_analyses):
+        raise Exception(f"Failed to fulfill all analyses: {list(analyses_to_perform_set-fulfilled_analyses)} (was all data loaded properly? using custom file/directory?)")
 
-    if(analyses_to_perform != fulfilled_analyses):
-        raise Exception(f"Failed to fulfill all analyses: {list(analyses_to_perform-fulfilled_analyses)} (was all data loaded properly? using custom file/directory?)")
+def get_analysis_order():
+    """
+    Given the list of analyses to perform, re-order it such that analyses with dependencies are
+      performed last.
+    """
+    nodeps = []
+    yesdeps = []
 
+    prog_data = ProgramData()
+    user_analysis_options = set(prog_data.args.analysis_options)
+    analysis_options = prog_data.settings['analysis_options']
+
+    for analysis_key in user_analysis_options:
+        if(len(analysis_options[analysis_key]["requires"]) > 0):
+            yesdeps.append(analysis_key)
+        else:
+            nodeps.append(analysis_key)
+
+    return nodeps + yesdeps
 
 

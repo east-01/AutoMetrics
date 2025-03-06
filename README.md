@@ -70,6 +70,12 @@ Argument | Description | Example usage
 "./output"
 -v | Verbose messaging in the console. | -v
 
+### Configuration
+
+TODO: more details
+
+Located in config.yaml in the same directory as tidemetrics.py
+
 ## Technical details
 
 There three main phases to AutoTM's lifecycle: collection, analysis, and visualization. 

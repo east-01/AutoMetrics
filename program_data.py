@@ -33,25 +33,41 @@ class ProgramData(metaclass=SingletonMeta):
             "type_string_identifier": "%TYPE_STRING%",
             # Analysis options, the types are the required types to perform the analysis.
             # Methods are filled out by analysis.py on the analysis() call
+            # Requirements are fulfilled in the analysis() call
             "analysis_options": {
                 "cpuhours": {
                     "types": ["cpu"],
+                    "requires": [],
+                    "method": None
+                },
+                "cpuhourstotal": {
+                    "types": ["cpu"],
+                    "requires": ["cpuhours"],
                     "method": None
                 },
                 "cpujobs": {
-                    "types": ["cpu", "gpu"],
+                    "types": ["cpu"],
+                    "requires": ["gpujobs"],
                     "method": None
                 },
                 "gpuhours": {
                     "types": ["gpu"],
+                    "requires": [],
+                    "method": None
+                },
+                "gpuhourstotal": {
+                    "types": ["gpu"],
+                    "requires": ["gpuhours"],
                     "method": None
                 },
                 "gpujobs": {
                     "types": ["gpu"],
-                    "method": None
+                    "requires": [],
+                    "method": None,
                 },
                 "uniquens": {
                     "types": ["cpu", "gpu"],
+                    "requires": [],
                     "method": None
                 }
             }
@@ -126,6 +142,15 @@ class ProgramData(metaclass=SingletonMeta):
 
     def verify_arguments(self):
         args = self.args
+
+        # Populate additional analyses to perform from requirements
+        for to_perform in self.args.analysis_options:
+            for requirement in self.settings['analysis_options'][to_perform]["requires"]:
+                if(requirement not in self.args.analysis_options):
+                    print(f"Added additional analysis \"{requirement}\" as it is a requirement of \"{to_perform}\"")
+                    self.args.analysis_options.append(requirement)
+
+        print(f"Will perform analyses: {", ".join(self.args.analysis_options)}")
 
         if(args.file is not None):
             # If the file exists, provide warnings about other arguments that won't be used
@@ -210,6 +235,9 @@ class ProgramData(metaclass=SingletonMeta):
 
             df.to_csv(df_path, index=False)
 
+        # Keep a list of files we've written to so we can clear the contents previously existing files
+        has_written = []
+
         # Save analysis results
         for identifier in data_blocks.keys():
             data_block = data_blocks[identifier] 
@@ -240,5 +268,17 @@ class ProgramData(metaclass=SingletonMeta):
                 else:
                     path = os.path.join(analysis_dir_path, f"text_results.txt")
                     print(f"  Saving analysis {analysis} to text results file.")
+
+                    contents = ""
+                    if(path in has_written):
+                        with open(path, "r") as file:
+                            contents = file.read()
+
                     with open(path, "w") as file:
-                        file.write(f"{analysis}: {str(result)}\n")
+                        if(len(contents) > 0):
+                            contents += "\n"
+                        contents += f"{analysis}: {str(result)}"
+                        file.write(contents)
+
+                    if(path not in has_written):
+                        has_written.append(path)
