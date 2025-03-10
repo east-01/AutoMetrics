@@ -32,14 +32,14 @@ def load_data():
     
     if(args.file is not None):
 
-        input_directory = [args.file] # TODO: Add input directory argument
+        input_directory = args.file # TODO: Add input directory argument
         print(f"Loading data from {len(input_directory)} file(s):")
         
         for file_path in input_directory:
             print(f"  {file_path}")
 
-            file_df = pd.read_csv(args.file)
-            data_repo.add_data_frame(file_df, args.file)
+            file_df = pd.read_csv(file_path)
+            data_repo.add_data_frame(file_df, file_path)
 
     else:
 
@@ -65,7 +65,7 @@ def load_data():
     #   other DF names so we need to load it last.
     for data_block in data_repo.data_blocks.values():
         start_ts, end_ts = data_block['period']
-        data_block['readable_period'] = get_range_printable(start_ts, end_ts)
+        data_block['readable_period'] = get_range_printable(start_ts, end_ts, prog_data.config['step'])
         fs_compat_name = data_block['readable_period'].replace("/", "_").replace(" ", "T").replace(":", "")
         data_block['out_file_name'] = f"{data_block['type']}-{fs_compat_name}"
 

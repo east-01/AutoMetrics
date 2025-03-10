@@ -18,12 +18,20 @@ def to_unix_ts(date_time_str):
     unix_timestamp = int(dt.timestamp())
     return unix_timestamp
 
-def get_range_as_month(start_ts, end_ts):
+def get_range_as_month(start_ts, end_ts, allowed_window=0):
+    """
+    Get a range as a month and year.
+    With the allowed_window variable you're allowed to define a grace-period window for the ending
+      time. For example, if you're computing a range with an allowed window of 10s and your ending
+      time stamp is 6 seconds from the last second of the month it will be returned.
+    """
+
     # Convert timestamps to datetime objects
     start_dt = datetime.datetime.fromtimestamp(start_ts)
     end_dt = datetime.datetime.fromtimestamp(end_ts)
 
     last_day = calendar.monthrange(start_dt.year, start_dt.month)[1]
+    last_moment = datetime.datetime(start_dt.year, start_dt.month, last_day, 23, 59, 59).timestamp()
 
     # Ensure the start unix timestamp is the first second of the month
     is_starting_second = start_dt.day == 1 and start_dt.hour == 0 and start_dt.minute == 0 and start_dt.second == 0
@@ -31,7 +39,7 @@ def get_range_as_month(start_ts, end_ts):
         return None
 
     # Ensure the end unix timestamp is the last second of the month
-    is_ending_second = end_dt.day == last_day and end_dt.hour == 23 and end_dt.minute == 59 and end_dt.second == 59
+    is_ending_second = last_moment-end_ts <= allowed_window
     if(not is_ending_second):
         return None
 
@@ -45,16 +53,19 @@ def get_range_as_month(start_ts, end_ts):
         'year': start_dt.year
     }
 
-def get_range_printable(start_ts, end_ts):
+def get_range_printable(start_ts, end_ts, allowed_window=0):
     """
     Get the unix timestamp range as a human-readable string.
     Two formats, higher priority first:
       - <MonthName><YY> The month name and the last two digits of the year
       - DD/MM/YYYY HH:MM-DD/MM/YYYY HH:MM
+    With the allowed_window variable you're allowed to define a grace-period window for the ending
+      time. For example, if you're computing a range with an allowed window of 10s and your ending
+      time stamp is 6 seconds from the last second of the month it will be returned.
     """
 
     # First format, timestamp range needs to cover a month period
-    monthyear = get_range_as_month(start_ts, end_ts)
+    monthyear = get_range_as_month(start_ts, end_ts, allowed_window)
     if(monthyear is not None):
         month_str = calendar.month_name[monthyear['month']]
         year_str = str(monthyear['year'])[2:]

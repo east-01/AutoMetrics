@@ -57,8 +57,7 @@ These arguments should not be used when using a PromQL query.
 
 Argument | Description | Example usage
 ---------|-------------|--------------
--f or --file | The input file to use. | -f "./input/input_file.csv"
--i or --in-dir | The input directory to use. | -f "./input"
+-f or --file | The input file/directory to use. The argument parser will automatically read if you have a single file or a directory. | -f "./input/input_file.csv" or -f "./input"
 
 #### Other arguments
 
@@ -66,15 +65,19 @@ These arguments can be used with either a PromQL query or custom file/directory 
 
 Argument | Description | Example usage
 ---------|-------------|--------------
--o or --out-dir | The directory that the result files will be placed in. | -o 
+-o or --outdir | The directory that the result files will be placed in. | -o 
 "./output"
 -v | Verbose messaging in the console. | -v
 
 ### Configuration
 
-TODO: more details
+Located in config.yaml in the same directory as tidemetrics.py, the config file is a place to store options that won't change very often.
 
-Located in config.yaml in the same directory as tidemetrics.py
+Config section | Description
+---------------|------------
+base_url | The url endpoint that PromQL queries will go to via a GET request.
+step | The period *in seconds* for each PromQL query.
+query | The query string that will be used for the PromQL request. **Must contain** the keyword `%TYPE_STRING%` where you want your resource type to go.
 
 ## Technical details
 

@@ -70,4 +70,4 @@ def get_query_block_string(query_block):
     """
     Given a query block dictionary (see build_query_list)
     """
-    return f"{query_block["type"].upper()} {get_range_printable(query_block["period"][0], query_block["period"][1])}"
+    return f"{query_block["type"].upper()} {get_range_printable(query_block["period"][0], query_block["period"][1]), ProgramData().config['step']}"

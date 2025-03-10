@@ -26,6 +26,7 @@ def analyze():
       use them.
     """
     prog_data = ProgramData()
+    data_blocks = prog_data.data_repo.data_blocks
 
     analysis_options = prog_data.settings['analysis_options']
     # Populate analysis implementation methods (we have cyclical referencing if the methods are placed in program_data.py)
@@ -39,21 +40,28 @@ def analyze():
 
     fulfilled_analyses = set()
 
-    data_blocks = prog_data.data_repo.data_blocks
-    for data_block_identifier in data_blocks.keys():
-        data_block = data_blocks[data_block_identifier]
+    for analysis in analyses_to_perform:
+        analysis_impl = analysis_options[analysis]
 
-        for analysis in analyses_to_perform:
-            analysis_impl = analysis_options[analysis]
+        for data_block_identifier in data_blocks.keys():
+            data_block = data_blocks[data_block_identifier]
+
             if(not data_block['type'] == analysis_impl['types'][0]):
                 continue
 
             if(data_block_identifier not in prog_data.analysis_repo.keys()):
                 prog_data.analysis_repo[data_block_identifier] = {}
 
-            prog_data.analysis_repo[data_block_identifier][analysis] = analysis_impl['method'](data_block)
-            fulfilled_analyses.add(analysis)
-
+            try:
+                prog_data.analysis_repo[data_block_identifier][analysis] = analysis_impl['method'](data_block)
+                fulfilled_analyses.add(analysis)
+            except KeyError as key_error:
+                print(f"Caught KeyError. Analysis repo dump:")
+                for analysis_key in prog_data.analysis_repo.keys():
+                    print(analysis_key)
+                    print(f"  {", ".join(prog_data.analysis_repo[analysis_key].keys())}")
+                print(key_error)
+                
     analyses_to_perform_set = set(analyses_to_perform)
     if(analyses_to_perform_set != fulfilled_analyses):
         raise Exception(f"Failed to fulfill all analyses: {list(analyses_to_perform_set-fulfilled_analyses)} (was all data loaded properly? using custom file/directory?)")
@@ -76,8 +84,6 @@ def get_analysis_order():
             if(all(x in order for x in requirements)):
                 order.append(analysis_key)
                 user_analysis_options.remove(analysis_key)
-            else:
-                print("not all requirements for", analysis_key)
 
     if(len(user_analysis_options) > 0):
         raise Exception(f"Failed to generate analysis order, could there be a circular/impossible dependency? Remaining analyses: {user_analysis_options}")

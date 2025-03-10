@@ -110,7 +110,6 @@ def analyze_unique_ns(data_block):
     gpu_namespaces = set(gpu_df.columns[1:].str.extract(r'namespace="([^"]+)"')[0])
 
     unique_ns = list(cpu_namespaces | gpu_namespaces)
-    print(unique_ns)
 
     return sorted(unique_ns)
 

@@ -1,5 +1,7 @@
 import argparse
 import time
+import os
+import datetime
 
 from program_data.settings import settings
 
@@ -12,6 +14,20 @@ def is_integer(value):
     if isinstance(value, str):
         return value.isdigit() or (value.startswith('-') and value[1:].isdigit())
     return False
+
+def parse_month_year(month_year_str):
+    try:
+        # Try to convert the input string to a date
+        month_year = datetime.strptime(month_year_str, '%B%y')
+        
+        # Create the dictionary with month and year
+        return {
+            'month': month_year.strftime('%B'),
+            'year': month_year.year
+        }
+    except ValueError:
+        # Handle invalid format
+        return f"Invalid format: {month_year_str}. Expected format is MonthYY."
 
 def parse_time_range(time_range_str):
     """
@@ -42,6 +58,19 @@ def parse_analysis_options(analysis_options_str):
             raise ValueError()
     return options
 
+def parse_file_list(path):
+    if(os.path.isfile(path)):
+        return [path]
+    elif(os.path.isdir(path)):
+        file_paths = []
+        for root, _, files in os.walk(path):
+            for file in files:
+                file_paths.append(os.path.join(root, file))
+        return file_paths
+    else:
+        print(f"Can't parse file list, path provided \"{path}\" is neither a file or directory.")
+        raise Exception()
+
 def load_arguments():
     """
     Using the argparse library, parse the command line arguments into usable data.
@@ -54,9 +83,8 @@ def load_arguments():
     parser.add_argument('analysis_options', type=parse_analysis_options, help="A list of analysis options separated by a comma (no spaces).")
     parser.add_argument('-p', '--period', dest='period', type=parse_time_range, help="A time range of the format <start>-<end> where your start and end times are UNIX timestamps.")
 
-    parser.add_argument('-f', '--file', dest='file', type=str, help='A local file to be used instead of polling Prometheus.')
+    parser.add_argument('-f', '--file', dest='file', type=parse_file_list, help='A local file/directory to be used instead of polling Prometheus.')
     parser.add_argument('-o', '--outdir', dest='outdir', type=str, help='The directory to send output files to.')
-    # TODO: Input directory
     parser.add_argument('-v', dest='verbose', action='store_true', help="Enable verbose output.")
 
     return parser.parse_args()

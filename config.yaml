@@ -1,5 +1,5 @@
 base_url: "https://thanos.nrp-nautilus.io/api/v1/query_range"
-step: 60m
+step: 3600
 query: |
     kube_pod_container_resource_requests{
         namespace=~"csusb.*|csu.*|cal-poly-humboldt.*|sdsu-.*|csun-.*|nsf-maica", 
@@ -13,3 +13,6 @@ query: |
         namespace=~"csusb.*|csu.*|cal-poly-humboldt.*|sdsu-.*|csun-.*|nsf-maica", 
         namespace!~"sdsu-jupyterhub.*"
     }
+top5hours_blacklist:
+  - sdsu-rci-jh
+  - csu-tide-jupyterhub

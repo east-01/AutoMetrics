@@ -38,7 +38,7 @@ def verify_config(prog_data):
     keys_to_check = ["base_url", "query", "step"]
 
     for key_to_check in keys_to_check:
-        if(key_to_check not in prog_data.config.keys() or len(prog_data.config[key_to_check]) == 0):
+        if(key_to_check not in prog_data.config.keys() or len(str(prog_data.config[key_to_check])) == 0):
             print(f"Failed to load configuration. Key \"{key_to_check}\" either doesn't exist in config or has no value. Exiting.")
             exit(1)
 

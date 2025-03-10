@@ -1,7 +1,7 @@
 venv
 
-output
-input
+output*
+input*
 temp
 *response.json
 *notes.txt
