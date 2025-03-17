@@ -14,57 +14,83 @@ settings = {
         "cpuhours": {
             "types": ["cpu"],
             "requires": [],
-            "method": None
+            "vis_options": {
+                "type": "horizontalbar",
+                "title": "Total CPU Hours by Namespace from %MONTH%",
+                "subtext": "Total CPU Hours: %TOTCPUHRS%",
+                "color": "skyblue",
+                "variables": {
+                    "TOTCPUHRS": "cpuhourstotal"
+                }
+            }
         },
         "cpuhourstotal": {
             "types": ["cpu"],
-            "requires": ["cpuhours"],
-            "method": None
+            "requires": ["cpuhours"]
         },
         "cpujobs": {
             "types": ["cpu"],
             "requires": ["gpujobs"],
-            "method": None
+            "vis_options": {
+                "type": "horizontalbar",
+                "title": "Total CPU Jobs by Namespace from %MONTH%",
+                "subtext": "Total CPU Jobs: %TOTCPUJOBS%",
+                "color": "skyblue",
+                "variables": {
+                    "TOTCPUJOBS": "cpujobstotal"
+                }
+            }
         },
         "cpujobstotal": {
             "types": ["cpu"],
-            "requires": ["cpujobs"],
-            "method": None,
+            "requires": ["cpujobs"]
         },
         "gpuhours": {
             "types": ["gpu"],
             "requires": [],
-            "method": None
+            "vis_options": {
+                "type": "horizontalbar",
+                "title": "Total GPU Hours by Namespace from %MONTH%",
+                "subtext": "Total GPU Hours: %TOTGPUHRS%",
+                "color": "orange",
+                "variables": {
+                    "TOTGPUHRS": "gpuhourstotal"
+                }
+            }
         },
         "gpuhourstotal": {
             "types": ["gpu"],
-            "requires": ["gpuhours"],
-            "method": None
+            "requires": ["gpuhours"]
         },
         "gpujobs": {
             "types": ["gpu"],
             "requires": [],
-            "method": None,
+            "vis_options": {
+                "type": "horizontalbar",
+                "title": "Total GPU Jobs by Namespace from %MONTH%",
+                "subtext": "Total GPU Jobs: %TOTGPUJOBS%",
+                "color": "orange",
+                "variables": {
+                    "TOTGPUJOBS": "gpujobstotal"
+                }
+            }
         },
         "gpujobstotal": {
             "types": ["gpu"],
-            "requires": ["gpujobs"],
-            "method": None,
+            "requires": ["gpujobs"]
         },
         "uniquenslist": {
             "types": ["cpu", "gpu"],
-            "requires": [],
-            "method": None
+            "requires": []
         },
         "uniquens": {
             "types": ["cpu", "gpu"],
-            "requires": ["uniquenslist"],
-            "method": None
+            "requires": ["uniquenslist"]
         },
         "jobstotal": {
             "types": ["cpu", "gpu"],
-            "requires": ["cpujobstotal", "gpujobstotal"],
-            "method": None
+            "requires": ["cpujobstotal", "gpujobstotal"]
         }
-    }
+    },
+    "vizualization_analyses": ["gpujobs", "gpuhours", "cpujobs", "cpuhours"]
 }

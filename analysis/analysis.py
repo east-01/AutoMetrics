@@ -53,7 +53,7 @@ def analyze():
                 prog_data.analysis_repo[data_block_identifier] = {}
 
             try:
-                prog_data.analysis_repo[data_block_identifier][analysis] = analysis_impl['method'](data_block)
+                prog_data.analysis_repo[data_block_identifier][analysis] = analysis_options_methods[analysis](data_block)
                 fulfilled_analyses.add(analysis)
             except KeyError as key_error:
                 print(f"Caught KeyError. Analysis repo dump:")

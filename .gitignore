@@ -6,6 +6,8 @@ temp
 *response.json
 *notes.txt
 
+.vscode/
+
 # Standard python gitignore:
 # Byte-compiled / optimized / DLL files
 __pycache__/
