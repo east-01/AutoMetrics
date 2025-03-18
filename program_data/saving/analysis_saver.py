@@ -11,6 +11,9 @@ class AnalysisSaver(Saver):
 
     def save(self):
         outdir = self.prog_data.args.outdir
+        out_path = os.path.join(outdir, "analysis", "")
+        if(not os.path.exists(out_path)):
+            os.mkdir(out_path)
         data_blocks = self.prog_data.data_repo.data_blocks
 
         # Keep a list of files we've written to so we can clear the contents previously existing files
@@ -26,7 +29,7 @@ class AnalysisSaver(Saver):
                 continue
 
             # Make sure the directory holding these results is there
-            analysis_dir_path = os.path.join(outdir, f"{data_block['out_file_name']} analysis")
+            analysis_dir_path = os.path.join(out_path, f"{data_block['readable_period']} analysis")
             if(not os.path.exists(analysis_dir_path)):
                 os.mkdir(analysis_dir_path)
 
@@ -48,7 +51,7 @@ class AnalysisSaver(Saver):
                     text_results.append(f"{analysis}: {str(result)}")
             
             if(len(text_results) > 0):
-                path = os.path.join(outdir, f"text_results.txt")
+                path = os.path.join(out_path, f"text_results.txt")
                 to_append = f"For {data_block['type']}-{data_block['readable_period']}:\n  {"\n  ".join(text_results)}"
 
                 append_line_to_file(path, to_append, path not in has_written)

@@ -29,5 +29,6 @@ class ProgramData(metaclass=SingletonMeta):
         verify_config(self)
     
         self.data_repo = None # To be loaded with data_loader.py
-        self.analysis_repo = None # To be loaded with analyzsis.py
+        self.analysis_repo = None # To be loaded with analysis.py
+        self.meta_analysis_repo = None # To be loaded with meta_analysis.py
         self.vis_repo = None # To be loaded with visualizations.py, same format as analysis_repo

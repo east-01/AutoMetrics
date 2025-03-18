@@ -29,9 +29,6 @@ def analyze():
     data_blocks = prog_data.data_repo.data_blocks
 
     analysis_options = prog_data.settings['analysis_options']
-    # Populate analysis implementation methods (we have cyclical referencing if the methods are placed in program_data.py)
-    for analysis_key in analysis_options_methods.keys():
-        analysis_options[analysis_key]["method"] = analysis_options_methods[analysis_key]
 
     prog_data.analysis_repo = {}
     analyses_to_perform = get_analysis_order()
@@ -46,7 +43,7 @@ def analyze():
         for data_block_identifier in data_blocks.keys():
             data_block = data_blocks[data_block_identifier]
 
-            if(not data_block['type'] == analysis_impl['types'][0]):
+            if(data_block['type'] != analysis_impl['types'][0]):
                 continue
 
             if(data_block_identifier not in prog_data.analysis_repo.keys()):
@@ -56,7 +53,7 @@ def analyze():
                 prog_data.analysis_repo[data_block_identifier][analysis] = analysis_options_methods[analysis](data_block)
                 fulfilled_analyses.add(analysis)
             except KeyError as key_error:
-                print(f"Caught KeyError. Analysis repo dump:")
+                print(f"Caught KeyError during analysis. Analysis repo dump:")
                 for analysis_key in prog_data.analysis_repo.keys():
                     print(analysis_key)
                     print(f"  {", ".join(prog_data.analysis_repo[analysis_key].keys())}")

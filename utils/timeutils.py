@@ -53,6 +53,18 @@ def get_range_as_month(start_ts, end_ts, allowed_window=0):
         'year': start_dt.year
     }
 
+def get_unix_timestamp_range(month, year):
+    """
+    Get the unix timestamp range for a specific month and year, returns the first and last seconds
+      of the month.
+    """
+    # Get the first and last day of the given month
+    first_day = datetime.datetime(year, month, 1, 0, 0, 0)  # First second of the month
+    last_day = datetime.datetime(year, month, calendar.monthrange(year, month)[1], 23, 59, 59)  # Last second of the month
+
+    # Convert to Unix timestamps
+    return (first_day.timestamp(), last_day.timestamp())
+
 def get_range_printable(start_ts, end_ts, allowed_window=0):
     """
     Get the unix timestamp range as a human-readable string.
@@ -74,3 +86,22 @@ def get_range_printable(start_ts, end_ts, allowed_window=0):
     # Second format
     outstr = f"{from_unix_ts(start_ts)}-{from_unix_ts(end_ts)}"
     return outstr
+
+def break_period_into_months(start_ts, end_ts):
+    end_dt = datetime.datetime.fromtimestamp(end_ts)
+    periods = []
+
+    for _ in range(12*20): # Maximum of 20 year spans for breaking up period
+        start_dt = datetime.datetime.fromtimestamp(start_ts)
+        curr_end = get_unix_timestamp_range(start_dt.month, start_dt.year)[1]
+
+        periods.append((start_ts, curr_end))
+
+        if(start_dt.month == end_dt.month and start_dt.year == end_dt.year):
+            break
+        else:
+            start_ts = curr_end+1
+    
+    return periods
+            
+                

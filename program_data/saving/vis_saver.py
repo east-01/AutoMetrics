@@ -11,8 +11,14 @@ class VizualizationsSaver(Saver):
         outdir = self.prog_data.args.outdir
         data_blocks = self.prog_data.data_repo.data_blocks
 
-        for identifier in data_blocks.keys():
-            data_block = data_blocks[identifier] 
+        if(self.prog_data.vis_repo is None):
+            return
+
+        for identifier in self.prog_data.vis_repo.keys():
+            name_prefix = "Meta analysis"
+            if(identifier != "meta"):
+                data_block = data_blocks[identifier] 
+                name_prefix = f"{data_block['type']}-{data_block['readable_period']}"
 
             # Make sure we have visualizations to save
             vizualizations = self.prog_data.vis_repo[identifier]
@@ -26,4 +32,4 @@ class VizualizationsSaver(Saver):
 
             for analysis in vizualizations.keys():
                 vis = vizualizations[analysis]
-                vis.savefig(os.path.join(vis_dir_path, f"{data_block['type']}-{data_block['readable_period']} {analysis}.png"), bbox_inches='tight')
+                vis.savefig(os.path.join(vis_dir_path, f"{name_prefix} {analysis}.png"), bbox_inches='tight')

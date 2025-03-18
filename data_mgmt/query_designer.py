@@ -4,7 +4,7 @@ import pandas as pd
 import requests
 
 from program_data.program_data import ProgramData
-from utils.timeutils import get_range_printable
+from utils.timeutils import get_range_printable, break_period_into_months
 
 def build_url(base, url_options = {}):
     """
@@ -54,15 +54,18 @@ def build_query_list():
         for type in analysis_options[analysis]['types']:
             required_types.add(type)
 
+    periods = break_period_into_months(args.period[0], args.period[1])
+
     query_list = []
-    for type in required_types:
-        type_string = prog_data.settings['type_strings'][type]
-        query_url = build_query_url(args.period[0], args.period[1], type_string)
-        query_list.append({
-            'query': query_url,
-            'type': type,
-            'period': args.period
-        })
+    for period in periods:
+        for type in required_types:
+            type_string = prog_data.settings['type_strings'][type]
+            query_url = build_query_url(period[0], period[1], type_string)
+            query_list.append({
+                'query': query_url,
+                'type': type,
+                'period': period
+            })
 
     return query_list
 

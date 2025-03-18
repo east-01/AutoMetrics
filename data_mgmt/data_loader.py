@@ -32,7 +32,7 @@ def load_data():
     
     if(args.file is not None):
 
-        input_directory = args.file # TODO: Add input directory argument
+        input_directory = args.file
         print(f"Loading data from {len(input_directory)} file(s):")
         
         for file_path in input_directory:
@@ -119,7 +119,13 @@ class DataRepository():
             }
         except Exception as e:
             print(f"Failed to add DataFrame from source {source}. Details:\n{e}")
-            
+    
+    def get_chronological_periods(self):
+        """
+        Returns the set of periods identifying all DataFrames in sorted order.
+        Guarantees: Unique periods, periods are ordered by starting order.
+        """
+        return sorted(set([full_identifier[0] for full_identifier in self.data_blocks.keys()]))
 
     def count(self):
         return len(self.data_blocks.keys())

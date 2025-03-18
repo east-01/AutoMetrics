@@ -9,6 +9,9 @@ class DataFrameSaver(Saver):
 
     def save(self):
         outdir = self.prog_data.args.outdir
+        out_path = os.path.join(outdir, "sources", "")
+        if(not os.path.exists(out_path)):
+            os.mkdir(out_path)
         data_blocks = self.prog_data.data_repo.data_blocks
 
         for identifier in data_blocks.keys():
@@ -16,7 +19,7 @@ class DataFrameSaver(Saver):
             df = data_block['data']
 
             # Convert the readable_period into a string thats saveable by the file system
-            df_path = os.path.join(outdir, f"{data_block['out_file_name']}.csv")
+            df_path = os.path.join(out_path, f"{data_block['out_file_name']}.csv")
             print(f"  Saving DataFrame file \"{df_path}\"")
 
             df.to_csv(df_path, index=False)

@@ -4,6 +4,7 @@ import os
 import datetime
 
 from program_data.settings import settings
+from utils.timeutils import get_unix_timestamp_range
 
 def is_integer(value):
     """
@@ -15,21 +16,7 @@ def is_integer(value):
         return value.isdigit() or (value.startswith('-') and value[1:].isdigit())
     return False
 
-def parse_month_year(month_year_str):
-    try:
-        # Try to convert the input string to a date
-        month_year = datetime.strptime(month_year_str, '%B%y')
-        
-        # Create the dictionary with month and year
-        return {
-            'month': month_year.strftime('%B'),
-            'year': month_year.year
-        }
-    except ValueError:
-        # Handle invalid format
-        return f"Invalid format: {month_year_str}. Expected format is MonthYY."
-
-def parse_time_range(time_range_str):
+def parse_unix_ts_range(time_range_str):
     """
     Parse a time range with the format <start>-<end> with both the start and end times being
     UNIX Timestamps.
@@ -46,6 +33,37 @@ def parse_time_range(time_range_str):
         raise ValueError()
     
     return (int(time_range_arr[0]), int(time_range_arr[1]))
+
+def parse_time_range(time_range_str):
+    try:
+        year_num = int(time_range_str)
+        # Ensure the year is in modern era
+        if(year_num >= 2000 and year_num < 4000):
+            jan = get_unix_timestamp_range(1, year_num)
+            dec = get_unix_timestamp_range(12, year_num)
+            return (jan[0], dec[1])
+    except:
+        pass
+
+    try:
+        month_year = datetime.datetime.strptime(time_range_str, '%B%y')
+        return get_unix_timestamp_range(month_year.month, month_year.year)
+    except ValueError as e:
+        pass
+
+    return parse_unix_ts_range(time_range_str)
+
+def parse_meta_analysis_options(analysis_options_str):
+    if(analysis_options_str == "all"):
+        return list(settings["meta_analysis_options"].keys())
+    
+    options = analysis_options_str.split(",")
+    for option in options:
+        if(option not in settings["meta_analysis_options"].keys()):
+            print(f"Failed to parse meta analysis option list, \"{option}\" is not recognized as a valid option.")
+            raise ValueError()
+
+    return options
 
 def parse_analysis_options(analysis_options_str):
     if(analysis_options_str == "all"):
@@ -81,6 +99,7 @@ def load_arguments():
     # These arguments will be populated if defaults arent provided
     # We could use default=__ here, but I want to be able to provide warnings in verify_arguments if necessary.
     parser.add_argument('analysis_options', type=parse_analysis_options, help="A list of analysis options separated by a comma (no spaces).")
+    parser.add_argument('--meta-analyze', dest="meta_analysis_options", type=parse_meta_analysis_options, help="A list of meta analysis options separated by a comma (no spaces).")
     parser.add_argument('-p', '--period', dest='period', type=parse_time_range, help="A time range of the format <start>-<end> where your start and end times are UNIX timestamps.")
 
     parser.add_argument('-f', '--file', dest='file', type=parse_file_list, help='A local file/directory to be used instead of polling Prometheus.')
@@ -94,7 +113,7 @@ def verify_arguments(prog_data):
 
     # Populate additional analyses to perform from requirements
     for to_perform in args.analysis_options:
-        for requirement in prog_data.settings['analysis_options'][to_perform]["requires"]:
+        for requirement in prog_data.settings["analysis_options"][to_perform]["requires"]:
             if(requirement not in args.analysis_options):
                 print(f"Added additional analysis \"{requirement}\" as it is a requirement of \"{to_perform}\"")
                 args.analysis_options.append(requirement)

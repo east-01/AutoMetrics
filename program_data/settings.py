@@ -90,7 +90,30 @@ settings = {
         "jobstotal": {
             "types": ["cpu", "gpu"],
             "requires": ["cpujobstotal", "gpujobstotal"]
-        }
+        },
     },
-    "vizualization_analyses": ["gpujobs", "gpuhours", "cpujobs", "cpuhours"]
+    "meta_analysis_options": {
+        "hours": {
+            "analyses": ["cpuhourstotal", "gpuhourstotal"],
+            "vis_options": {
+                "type": "timeseries",
+                "title": "CPU and GPU hours by month",
+                "colors": {
+                    "cpuhourstotal": "red",
+                    "gpuhourstotal": "blue"
+                }
+            }
+        },
+        "jobs": {
+            "analyses": ["cpujobstotal", "gpujobstotal"],
+            "vis_options": {
+                "type": "timeseries",
+                "title": "CPU and GPU jobs by month",
+                "colors": {
+                    "cpujobstotal": "red",
+                    "gpujobstotal": "blue"
+                }
+            }
+        }
+    }
 }
