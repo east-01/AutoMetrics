@@ -1,3 +1,6 @@
+# from data.identifiers.identifier import SourceIdentifier
+from src.data.filters import filter_source_type, filter_analyis_type
+
 settings = {
     "type_options": ["cpu", "gpu"],
     # A dictionary mapping a type option to the type that it appears as in the query
@@ -10,9 +13,9 @@ settings = {
     # Analysis options, the types are the required types to perform the analysis.
     # Methods are filled out by analysis.py on the analysis() call
     # Requirements are fulfilled in the analysis() call
-    "analysis_options": {
+    "analysis_settings": {
         "cpuhours": {
-            "types": ["cpu"],
+            "filter": filter_source_type("cpu"),
             "requires": [],
             "vis_options": {
                 "type": "horizontalbar",
@@ -25,11 +28,11 @@ settings = {
             }
         },
         "cpuhourstotal": {
-            "types": ["cpu"],
+            "filter": filter_analyis_type("cpuhours"),
             "requires": ["cpuhours"]
         },
         "cpujobs": {
-            "types": ["cpu"],
+            "filter": filter_source_type("cpu"),
             "requires": ["gpujobs"],
             "vis_options": {
                 "type": "horizontalbar",
@@ -42,11 +45,11 @@ settings = {
             }
         },
         "cpujobstotal": {
-            "types": ["cpu"],
+            "filter": filter_analyis_type("cpujobs"),
             "requires": ["cpujobs"]
         },
         "gpuhours": {
-            "types": ["gpu"],
+            "filter": filter_source_type("gpu"),
             "requires": [],
             "vis_options": {
                 "type": "horizontalbar",
@@ -59,11 +62,11 @@ settings = {
             }
         },
         "gpuhourstotal": {
-            "types": ["gpu"],
+            "filter": filter_analyis_type("gpuhours"),
             "requires": ["gpuhours"]
         },
         "gpujobs": {
-            "types": ["gpu"],
+            "filter": filter_source_type("gpu"),
             "requires": [],
             "vis_options": {
                 "type": "horizontalbar",
@@ -76,44 +79,36 @@ settings = {
             }
         },
         "gpujobstotal": {
-            "types": ["gpu"],
+            "filter": filter_analyis_type("gpujobs"),
             "requires": ["gpujobs"]
         },
-        "uniquenslist": {
-            "types": ["cpu", "gpu"],
-            "requires": []
-        },
-        "uniquens": {
-            "types": ["cpu", "gpu"],
-            "requires": ["uniquenslist"]
-        },
         "jobstotal": {
-            "types": ["cpu", "gpu"],
+            "filter": filter_analyis_type("cpujobstotal"),
             "requires": ["cpujobstotal", "gpujobstotal"]
-        },
-    },
-    "meta_analysis_options": {
-        "hours": {
-            "analyses": ["cpuhourstotal", "gpuhourstotal"],
-            "vis_options": {
-                "type": "timeseries",
-                "title": "CPU and GPU hours by month",
-                "colors": {
-                    "cpuhourstotal": "red",
-                    "gpuhourstotal": "blue"
-                }
-            }
-        },
-        "jobs": {
-            "analyses": ["cpujobstotal", "gpujobstotal"],
-            "vis_options": {
-                "type": "timeseries",
-                "title": "CPU and GPU jobs by month",
-                "colors": {
-                    "cpujobstotal": "red",
-                    "gpujobstotal": "blue"
-                }
-            }
-        }
+        }#,
+        # "cvgpuhours": {
+        #     "filter": None,
+        #     "requires": ["cpuhourstotal", "gpuhourstotal"],
+        #     "vis_options": {
+        #         "type": "timeseries",
+        #         "title": "CPU and GPU hours by month",
+        #         "colors": {
+        #             "cpuhourstotal": "red",
+        #             "gpuhourstotal": "blue"
+        #         }
+        #     }
+        # },
+        # "cvgpujobs": {
+        #     "filter": None,
+        #     "requires": ["cpujobstotal", "gpujobstotal"],
+        #     "vis_options": {
+        #         "type": "timeseries",
+        #         "title": "CPU and GPU jobs by month",
+        #         "colors": {
+        #             "cpujobstotal": "red",
+        #             "gpujobstotal": "blue"
+        #         }
+        #     }
+        # }
     }
 }

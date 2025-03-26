@@ -1,5 +1,8 @@
 from program_data.program_data import ProgramData
-from analysis.analysis_impl import analyze_hours_byns, analyze_hours_total, analyze_jobs, analyze_jobs_total, analyze_cpu_only_jobs, analyze_unique_ns, analyze_unique_ns_count, analyze_all_jobs_total
+from analysis.analysis_impl import analyze_hours_byns, analyze_hours_total, analyze_jobs, analyze_jobs_total, analyze_cpu_only_jobs, analyze_all_jobs_total
+from data.data_repository import DataRepository
+from data.filters import filter_type
+from data.identifiers.identifier import Identifier, AnalysisIdentifier, SourceIdentifier
 
 analysis_options_methods = {
     "cpuhours": analyze_hours_byns,
@@ -10,8 +13,6 @@ analysis_options_methods = {
     "gpuhourstotal": analyze_hours_total,
     "gpujobs": analyze_jobs,
     "gpujobstotal": analyze_jobs_total,
-    "uniquenslist": analyze_unique_ns,
-    "uniquens": analyze_unique_ns_count,
     "jobstotal": analyze_all_jobs_total
 }
 
@@ -26,38 +27,30 @@ def analyze():
       use them.
     """
     prog_data = ProgramData()
-    data_blocks = prog_data.data_repo.data_blocks
+    data_repo: DataRepository = prog_data.data_repo
 
-    analysis_options = prog_data.settings['analysis_options']
-
-    prog_data.analysis_repo = {}
     analyses_to_perform = get_analysis_order()
 
     print(f"Analysis perform order: {", ".join(analyses_to_perform)}")
 
     fulfilled_analyses = set()
-
+    # Perform each analysis, performing analyses in the outer loop ensures the dependency order
+    #   is maintained.
     for analysis in analyses_to_perform:
-        analysis_impl = analysis_options[analysis]
+        analysis_settings = prog_data.settings["analysis_settings"][analysis]
+        analysis_filter = analysis_settings["filter"]
+        analysis_method = analysis_options_methods[analysis]
 
-        for data_block_identifier in data_blocks.keys():
-            data_block = data_blocks[data_block_identifier]
+        if(analysis_filter is None):
+            analysis_method(None)            
+        else:
+            identifiers = data_repo.filter_ids(analysis_filter)
 
-            if(data_block['type'] != analysis_impl['types'][0]):
-                continue
+            for identifier in identifiers:
+                analysis_identifier = AnalysisIdentifier(identifier, analysis)
+                analysis_result = analysis_method(identifier)
 
-            if(data_block_identifier not in prog_data.analysis_repo.keys()):
-                prog_data.analysis_repo[data_block_identifier] = {}
-
-            try:
-                prog_data.analysis_repo[data_block_identifier][analysis] = analysis_options_methods[analysis](data_block)
-                fulfilled_analyses.add(analysis)
-            except KeyError as key_error:
-                print(f"Caught KeyError during analysis. Analysis repo dump:")
-                for analysis_key in prog_data.analysis_repo.keys():
-                    print(analysis_key)
-                    print(f"  {", ".join(prog_data.analysis_repo[analysis_key].keys())}")
-                print(key_error)
+                data_repo.add(analysis_identifier, analysis_result)
                 
     analyses_to_perform_set = set(analyses_to_perform)
     if(analyses_to_perform_set != fulfilled_analyses):
@@ -72,7 +65,7 @@ def get_analysis_order():
 
     prog_data = ProgramData()
     user_analysis_options = set(prog_data.args.analysis_options)
-    analysis_options = prog_data.settings['analysis_options']
+    analysis_options = prog_data.settings["analysis_settings"]
 
     # Only iterate n**2 times, any further iterations would mean there is an impossible/circular dependency
     for _ in range(0, len(analysis_options.keys())**2):

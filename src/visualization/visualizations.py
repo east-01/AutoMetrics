@@ -18,7 +18,7 @@ def vizualize():
         analyses = prog_data.analysis_repo[identifier]
         # Loop through each analysis that can be visualized
         for analysis in analyses.keys():
-            analysis_options = prog_data.settings["analysis_options"][analysis]
+            analysis_options = prog_data.settings["analysis_settings"][analysis]
             # Ensure that this is an analysis we can visualize
             if("vis_options" not in analysis_options.keys()):
                 continue

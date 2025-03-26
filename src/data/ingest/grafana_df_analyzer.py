@@ -1,8 +1,8 @@
 import datetime
 import calendar
 
-from program_data.program_data import ProgramData
-from utils.timeutils import to_unix_ts, get_unix_timestamp_range
+from src.program_data.settings import settings
+from src.utils.timeutils import to_unix_ts, get_unix_timestamp_range
 
 def extract_column_data(col_name):
     """
@@ -22,12 +22,26 @@ def extract_column_data(col_name):
 
     return data
 
-def analyze_df_type(col_datas):
+def get_resource_type(df):
     """
     Analyze each column data in the DataFrame to get the set of unique resource types.
     The resource type is the string following the resource= tag in the column title.
     It is expected that the DataFrame has uniform resource types among all columns.
+
+    Args:
+        df (pd.DataFrame): A GRAFANA pandas DataFrame. Expecting formatting from Grafana generated
+            .csv, with the Time column included.
+    
+    Returns:
+        string: The resource type of all columns in the DataFrame.
+
+    Raises:
+        Exception: Column doesn't include a resource type, more than one resource type is in the
+            DataFrame, the settings["type_string"] doesn't contain the target type- the function
+            won't be able to reverse the program type from the type string.
     """
+    col_datas = [extract_column_data(col_name) for col_name in df.columns[1:]]
+
     # Create a set of all the type strings, this will give a list of unique type names
     type_set = set()
     for col_data in col_datas:
@@ -44,7 +58,7 @@ def analyze_df_type(col_datas):
     type = None
     
     # Find the program type by finding the dictionary key from its value
-    type_strings = ProgramData().settings['type_strings']
+    type_strings = settings['type_strings']
     for possible_type in type_strings.keys():
         if(type_strings[possible_type] == type_string):
             type = possible_type
@@ -55,7 +69,7 @@ def analyze_df_type(col_datas):
 
     return type
 
-def analyze_df_period(df):
+def get_period(df):
     """
     Ensure the DataFrame has a Time column, returning the start and ending times.
     """
@@ -68,24 +82,21 @@ def analyze_df_period(df):
     if(len(times) < 1):
         raise Exception("Period analysis error: Time column of length less than 1")
     
-    # TODO: Upgrade time period inferring
-    # Instead of inferring the time period here, we should look at all time periods and fix their
-    #   start and end times to the closest checkpoints. Like this:
-    # month_st=0, df_st=12, df_et=30, month_et=45 -> month_st=df_st=0, month_et=df_et=45
-
     start = to_unix_ts(times[0])
     start_dt = datetime.datetime.fromtimestamp(start)
-    start_range = get_unix_timestamp_range(start_dt.month, start_dt.year)
-    if(start != start_range[0]):
-        print(f"WARN: Inferring time range start to the first second of the month {start} -> {start_range[0]}")
-        start = start_range[0]
+    # TODO: Functionality will be covered by period filter (see main.py)
+    # start_range = get_unix_timestamp_range(start_dt.month, start_dt.year)
+    # if(start != start_range[0]):
+    #     print(f"WARN: Inferring time range start to the first second of the month {start} -> {start_range[0]}")
+    #     start = start_range[0]
 
     end = to_unix_ts(times[-1])
     end_dt = datetime.datetime.fromtimestamp(end)
-    end_range = get_unix_timestamp_range(end_dt.month, end_dt.year)
-    if(end != end_range[1]):
-        print(f"WARN: Inferring time range end to the last second of the month {end} -> {end_range[1]}")
-        end = end_range[1]
+    # TODO: Functionality will be covered by period filter (see main.py)
+    # end_range = get_unix_timestamp_range(end_dt.month, end_dt.year)
+    # if(end != end_range[1]):
+    #     print(f"WARN: Inferring time range end to the last second of the month {end} -> {end_range[1]}")
+    #     end = end_range[1]
 
     if(start_dt.month != end_dt.month or start_dt.year != end_dt.year):
         print("ERROR: Analyzing df's period shows that the start and end times belong to different months. This will most likely yield broken results. Try using a PromQL query instead of input directory.")

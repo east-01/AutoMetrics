@@ -5,6 +5,7 @@ import pandas as pd
 from program_data.settings import settings
 from program_data.arguments import load_arguments, verify_arguments
 from program_data.config import load_config, verify_config
+from data.data_repository import DataRepository
 
 class SingletonMeta(type):
     _instances = {}
@@ -28,7 +29,4 @@ class ProgramData(metaclass=SingletonMeta):
         self.config = load_config()
         verify_config(self)
     
-        self.data_repo = None # To be loaded with data_loader.py
-        self.analysis_repo = None # To be loaded with analysis.py
-        self.meta_analysis_repo = None # To be loaded with meta_analysis.py
-        self.vis_repo = None # To be loaded with visualizations.py, same format as analysis_repo
+        self.data_repo = DataRepository()

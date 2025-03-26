@@ -3,8 +3,8 @@ import time
 import os
 import datetime
 
-from program_data.settings import settings
-from utils.timeutils import get_unix_timestamp_range
+from .settings import settings
+from src.utils.timeutils import get_unix_timestamp_range
 
 def is_integer(value):
     """
@@ -53,25 +53,13 @@ def parse_time_range(time_range_str):
 
     return parse_unix_ts_range(time_range_str)
 
-def parse_meta_analysis_options(analysis_options_str):
-    if(analysis_options_str == "all"):
-        return list(settings["meta_analysis_options"].keys())
-    
-    options = analysis_options_str.split(",")
-    for option in options:
-        if(option not in settings["meta_analysis_options"].keys()):
-            print(f"Failed to parse meta analysis option list, \"{option}\" is not recognized as a valid option.")
-            raise ValueError()
-
-    return options
-
 def parse_analysis_options(analysis_options_str):
     if(analysis_options_str == "all"):
-        return list(settings['analysis_options'].keys())
+        return list(settings["analysis_settings"].keys())
 
     options = analysis_options_str.split(",")
     for option in options:
-        if(option not in settings['analysis_options'].keys()):
+        if(option not in settings["analysis_settings"].keys()):
             print(f"Failed to parse analysis option list, \"{option}\" is not recognized as a valid option.")
             raise ValueError()
     return options
@@ -99,7 +87,6 @@ def load_arguments():
     # These arguments will be populated if defaults arent provided
     # We could use default=__ here, but I want to be able to provide warnings in verify_arguments if necessary.
     parser.add_argument('analysis_options', type=parse_analysis_options, help="A list of analysis options separated by a comma (no spaces).")
-    parser.add_argument('--meta-analyze', dest="meta_analysis_options", type=parse_meta_analysis_options, help="A list of meta analysis options separated by a comma (no spaces).")
     parser.add_argument('-p', '--period', dest='period', type=parse_time_range, help="A time range of the format <start>-<end> where your start and end times are UNIX timestamps.")
 
     parser.add_argument('-f', '--file', dest='file', type=parse_file_list, help='A local file/directory to be used instead of polling Prometheus.')
@@ -113,7 +100,7 @@ def verify_arguments(prog_data):
 
     # Populate additional analyses to perform from requirements
     for to_perform in args.analysis_options:
-        for requirement in prog_data.settings["analysis_options"][to_perform]["requires"]:
+        for requirement in prog_data.settings["analysis_settings"][to_perform]["requires"]:
             if(requirement not in args.analysis_options):
                 print(f"Added additional analysis \"{requirement}\" as it is a requirement of \"{to_perform}\"")
                 args.analysis_options.append(requirement)
