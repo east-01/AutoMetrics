@@ -6,7 +6,7 @@ from src.utils.timeutils import to_unix_ts, get_unix_timestamp_range
 
 def extract_column_data(col_name):
     """
-    Given a column name with the format {label1="value1",label2="value2",...} break it down into a
+    Given a column name with the format {label1="value1", label2="value2",...} break it down into a
       usable python dictionary.
     """
     # Strip opening and closing {}

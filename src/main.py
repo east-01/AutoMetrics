@@ -1,10 +1,9 @@
 import os
+import sys
 
-from program_data.program_data import ProgramData
-from program_data.saving.summary_saver import SummarySaver
-from program_data.saving.dataframe_saver import DataFrameSaver
-from program_data.saving.analysis_saver import AnalysisSaver
-from program_data.saving.vis_saver import VizualizationsSaver
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
+from program_data.program_data import ProgramData, load_std_prog_data
 from data.ingest.ingest import ingest
 from analysis.analysis import analyze
 from analysis.meta_analysis import metaanalyze
@@ -14,10 +13,10 @@ import pandas as pd
 # Hides warnings for .fillna() calls
 pd.set_option('future.no_silent_downcasting', True)
 
-prog_data = ProgramData()
+prog_data = load_std_prog_data()
 
 # Load DataFrames
-prog_data.data_repo = ingest(prog_data.args)
+prog_data.data_repo = ingest(prog_data)
 
 for identifier in prog_data.data_repo.get_ids():
     print(f"ID {identifier}: {"\n  ".join(str(prog_data.data_repo.get(identifier)).split("\n"))}")
@@ -46,16 +45,16 @@ vizualize()
 # Manually visualize meta analysis
 
 # Save output data
-savers = [SummarySaver(), DataFrameSaver(), AnalysisSaver(), VizualizationsSaver()]
+# savers = [SummarySaver(), DataFrameSaver(), AnalysisSaver(), VizualizationsSaver()]
 
 # Only save if an out directory is specified
-out_dir = ProgramData().args.outdir
-if(out_dir is not None):
-    if(not os.path.exists(out_dir)):
-        os.mkdir(out_dir)
+# out_dir = ProgramData().args.outdir
+# if(out_dir is not None):
+#     if(not os.path.exists(out_dir)):
+#         os.mkdir(out_dir)
 
-    for saver in savers:
-        saver.save()
+#     for saver in savers:
+#         saver.save()
 
-if(savers[0].can_summarize):
-    savers[0].print_all_summaries()    
+# if(savers[0].can_summarize):
+#     savers[0].print_all_summaries()    

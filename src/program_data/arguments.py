@@ -4,7 +4,7 @@ import os
 import datetime
 
 from .settings import settings
-from src.utils.timeutils import get_unix_timestamp_range
+from utils.timeutils import get_unix_timestamp_range
 
 def is_integer(value):
     """
@@ -97,6 +97,9 @@ def load_arguments():
 
 def verify_arguments(prog_data):
     args = prog_data.args
+
+    if(not isinstance(args.analysis_options, list)):
+        raise Exception("Analysis options is not a list.")
 
     # Populate additional analyses to perform from requirements
     for to_perform in args.analysis_options:

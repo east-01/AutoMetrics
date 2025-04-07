@@ -5,22 +5,23 @@
 
 import pandas as pd
 
+from src.program_data.program_data import ProgramData
 from .grafana_df_analyzer import get_resource_type, get_period
 from .query_executor import perform_query
 from .query_designer import build_query_list, get_query_block_string
 from src.data.identifiers.identifier import SourceIdentifier
 from src.data.data_repository import DataRepository
 
-def ingest(args, config, data_repo: DataRepository = DataRepository()):
+def ingest(prog_data: ProgramData):
     """
     Observes the state of args and builds the corresponding DataRepository object.
     """
 
-    data_frames = _load_dfs(args, config)
+    data_repo = DataRepository()
+    data_frames = _load_dfs(prog_data)
 
     for df in data_frames:
         out_df, identifier = _ingest_grafana_df(df)
-
         data_repo.add(identifier, out_df)
 
     # Ensure the DataRepository loaded properly
@@ -31,7 +32,7 @@ def ingest(args, config, data_repo: DataRepository = DataRepository()):
 
     return data_repo
 
-def _load_dfs(args, config):
+def _load_dfs(prog_data: ProgramData):
     """
     Load the data_frames as specified by the arguments.
     Two cases:
@@ -44,9 +45,9 @@ def _load_dfs(args, config):
 
     data_frames = []
      
-    if(args.file is not None):
+    if(prog_data.args.file is not None):
 
-        input_directory = args.file
+        input_directory = prog_data.args.file
         print(f"Loading data from {len(input_directory)} file(s):")
         
         for file_path in input_directory:
@@ -57,11 +58,11 @@ def _load_dfs(args, config):
 
     else:
 
-        query_blocks = build_query_list(config)
+        query_blocks = build_query_list(prog_data.config)
         print(f"Loading data from {len(query_blocks)} query/queries:")
 
         for query_block in query_blocks:
-            print(f"  {get_query_block_string(config, query_block)}")
+            print(f"  {get_query_block_string(prog_data.config, query_block)}")
 
             query_url = query_block['query']
             query_response = perform_query(query_url)
@@ -94,4 +95,4 @@ def _ingest_grafana_df(df):
     # Convert the data frame to numeric values so we can properly analyze it later.
     df.iloc[:, 1:] = df.iloc[:, 1:].map(pd.to_numeric, errors="coerce")
 
-    return df, identifier
+    return (df, identifier)

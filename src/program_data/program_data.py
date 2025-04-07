@@ -7,26 +7,24 @@ from program_data.arguments import load_arguments, verify_arguments
 from program_data.config import load_config, verify_config
 from data.data_repository import DataRepository
 
-class SingletonMeta(type):
-    _instances = {}
+def load_std_prog_data():
+    """
+    Loads the ProgramData in the context of a standard running program.
+    """
+    return ProgramData(load_arguments(), load_config())
 
-    def __call__(cls, *args, **kwargs):
-        if cls not in cls._instances:
-            cls._instances[cls] = super().__call__(*args, **kwargs)
-        return cls._instances[cls]
-
-class ProgramData(metaclass=SingletonMeta):
-    def __init__(self):
+class ProgramData():
+    def __init__(self, args, config):
         
         # Settings are truths about the program that shouldn't be mutable by the user
         self.settings = settings
 
-        self.args = load_arguments()
+        self.args = args
         verify_arguments(self)
 
         print(f"Will perform analyses: {", ".join(self.args.analysis_options)}")
 
-        self.config = load_config()
+        self.config = config
         verify_config(self)
     
         self.data_repo = DataRepository()

@@ -31,6 +31,12 @@ class TestDataRepository:
         with pytest.raises(ValueError):
             self.repo.add("notsrcid", "value")
 
+    def test_contains(self):
+        assert self.repo.contains(self.srcid1)
+
+    def test_not_contains(self):
+        assert not self.repo.contains(SourceIdentifier(0, 1, "cpu"))
+
     def test_count(self):
         assert self.repo.count() == 6
 

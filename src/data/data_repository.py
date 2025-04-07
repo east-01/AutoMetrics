@@ -31,7 +31,7 @@ class DataRepository():
         if(not issubclass(type(identifier), Identifier)):
             raise ValueError(f"Cannot add data for \"{identifier}\" identifier type \"{type(identifier)}\" is not a subclass of Identifier.")
         if(self.contains(identifier)):
-            raise ValueError(f"Cannot add data for \"{identifier}\" it already exists in the repo.")
+            raise ValueError(f"Cannot add data for \"{identifier}\" it already exists in the repo.\nCurrent repo:\n  {"\n  ".join(str(key) for key in self._data.keys())}")
         if(metadata is None):
             raise ValueError(f"Metadata cannot be none.")
 
@@ -63,7 +63,7 @@ class DataRepository():
         Returns:
             bool: Contains status.
         """
-        return identifier in self._data
+        return identifier in self._data.keys()
 
     def get(self, identifier: Identifier) -> tuple[object, dict]:
         """
