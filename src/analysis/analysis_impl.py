@@ -4,10 +4,10 @@
 
 import pandas as pd
 
-from program_data.program_data import ProgramData
-from .grafana_df_cleaning import clear_duplicate_uids, clear_blacklisted_uids, has_time_column, clear_time_column
-from data.ingest.grafana_df_analyzer import extract_column_data
-from data.identifiers.identifier import SourceIdentifier, AnalysisIdentifier
+from src.program_data.program_data import ProgramData
+from src.analysis.grafana_df_cleaning import clear_duplicate_uids, clear_blacklisted_uids, has_time_column, clear_time_column
+from src.data.ingest.grafana_df_analyzer import extract_column_data
+from src.data.identifiers.identifier import SourceIdentifier, AnalysisIdentifier
 
 #region Hours
 def analyze_hours_byns(identifier):

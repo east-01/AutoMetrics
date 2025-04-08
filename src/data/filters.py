@@ -1,4 +1,4 @@
-from .identifiers.identifier import Identifier, SourceIdentifier, AnalysisIdentifier
+from src.data.identifiers.identifier import Identifier, SourceIdentifier, AnalysisIdentifier
 
 def filter_type(filtertype: type):
     """

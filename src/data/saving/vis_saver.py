@@ -1,7 +1,7 @@
 import os
 
-from program_data.program_data import ProgramData
-from program_data.saving.saver import Saver
+from src.program_data.program_data import ProgramData
+from src.data.saving.saver import Saver
 
 class VizualizationsSaver(Saver):
     def __init__(self):

@@ -1,5 +1,5 @@
 # from data.identifiers.identifier import SourceIdentifier
-from data.filters import filter_source_type, filter_analyis_type
+from src.data.filters import filter_source_type, filter_analyis_type
 
 settings = {
     "type_options": ["cpu", "gpu"],

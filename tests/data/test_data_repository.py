@@ -4,7 +4,7 @@ import sys
 # sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from src.data.identifiers.identifier import Identifier, SourceIdentifier, AnalysisIdentifier, VisIdentifier
 from src.data.data_repository import DataRepository
-from src.data.filters import filter_type, filter_analyses_of
+from src.data.filters import filter_type, filter_source_type, filter_analyses_of
 
 class TestDataRepository:
     def setup_method(self, method):
@@ -42,6 +42,12 @@ class TestDataRepository:
 
     def test_filter_type(self):
         assert len(self.repo.filter_ids(filter_type(SourceIdentifier))) == 3
+
+    def test_filter_source_type(self):
+        assert len(self.repo.filter_ids(filter_source_type("cpu"))) == 2
+
+    def test_filter_source_type_gpu(self):
+        assert len(self.repo.filter_ids(filter_source_type("gpu"))) == 1
 
     def test_filter_analysis_of(self):
         assert len(self.repo.filter_ids(filter_analyses_of(self.srcid3))) == 1

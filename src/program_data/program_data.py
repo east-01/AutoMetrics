@@ -2,10 +2,10 @@
 #   class is created all of the same information can be accessed.
 import pandas as pd
 
-from program_data.settings import settings
-from program_data.arguments import load_arguments, verify_arguments
-from program_data.config import load_config, verify_config
-from data.data_repository import DataRepository
+from src.program_data.settings import settings
+from src.program_data.arguments import load_arguments, verify_arguments
+from src.program_data.config import load_config, verify_config
+from src.data.data_repository import DataRepository
 
 def load_std_prog_data():
     """

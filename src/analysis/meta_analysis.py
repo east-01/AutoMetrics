@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from program_data.program_data import ProgramData
+from src.program_data.program_data import ProgramData
 
 def metaanalyze():
     prog_data = ProgramData()

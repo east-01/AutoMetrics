@@ -3,8 +3,8 @@ import time
 import os
 import datetime
 
-from .settings import settings
-from utils.timeutils import get_unix_timestamp_range
+from src.program_data.settings import settings
+from src.utils.timeutils import get_unix_timestamp_range
 
 def is_integer(value):
     """

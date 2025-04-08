@@ -1,14 +1,15 @@
 import os
 import sys
-
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-
-from program_data.program_data import ProgramData, load_std_prog_data
-from data.ingest.ingest import ingest
-from analysis.analysis import analyze
-from analysis.meta_analysis import metaanalyze
-from visualization.visualizations import vizualize
 import pandas as pd
+
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+sys.path.insert(0, project_root)
+
+from src.program_data.program_data import ProgramData, load_std_prog_data
+from src.data.ingest.ingest import ingest
+from src.analysis.analysis import analyze
+from src.analysis.meta_analysis import metaanalyze
+from src.visualization.visualizations import vizualize
 
 # Hides warnings for .fillna() calls
 pd.set_option('future.no_silent_downcasting', True)
@@ -17,9 +18,7 @@ prog_data = load_std_prog_data()
 
 # Load DataFrames
 prog_data.data_repo = ingest(prog_data)
-
-for identifier in prog_data.data_repo.get_ids():
-    print(f"ID {identifier}: {"\n  ".join(str(prog_data.data_repo.get(identifier)).split("\n"))}")
+prog_data.data_repo.print_summary()
 
 print("WARNING: Code will NOT work until the period filter is applied to the data repository. Notes about it in main.py")
 # TODO: Apply period filter- adjust periods so they fill out time slots
@@ -36,8 +35,8 @@ print("WARNING: Code will NOT work until the period filter is applied to the dat
 #     data_block['out_file_name'] = f"{data_block['type']}-{fs_compat_name}"
 
 # Analyze dataframes
-analyze()
-metaanalyze()
+analyze(prog_data)
+prog_data.data_repo.print_summary()
 
 # Visualize analysis results
 vizualize()

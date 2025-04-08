@@ -1,6 +1,6 @@
-from typing import Type, TypeVar
+import pandas as pd
 
-from .identifiers.identifier import Identifier
+from src.data.identifiers.identifier import Identifier
 
 class DataRepository():
     """
@@ -155,3 +155,14 @@ class DataRepository():
 
     def count(self):
         return len(self._data.keys())
+    
+    def print_summary(self):
+        print("Summary of DataRepository:")
+        for identifier in self.get_ids():
+            data = self.get_data(identifier)
+            datastr = ""
+            if(isinstance(data, pd.DataFrame)):
+                datastr = "DataFrame"
+            else:
+                datastr = str(data)
+            print(f"ID {identifier}: \n  {"\n  ".join(datastr.split("\n"))}")

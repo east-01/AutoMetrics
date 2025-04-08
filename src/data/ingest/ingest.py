@@ -6,9 +6,9 @@
 import pandas as pd
 
 from src.program_data.program_data import ProgramData
-from .grafana_df_analyzer import get_resource_type, get_period
-from .query_executor import perform_query
-from .query_designer import build_query_list, get_query_block_string
+from src.data.ingest.grafana_df_analyzer import get_resource_type, get_period
+from src.data.ingest.query_executor import perform_query
+from src.data.ingest.query_designer import build_query_list, get_query_block_string
 from src.data.identifiers.identifier import SourceIdentifier
 from src.data.data_repository import DataRepository
 

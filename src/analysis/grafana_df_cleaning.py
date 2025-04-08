@@ -1,4 +1,4 @@
-from data.ingest.grafana_df_analyzer import extract_column_data
+from src.data.ingest.grafana_df_analyzer import extract_column_data
 
 def has_time_column(df):
     return df.columns[0]=="Time"

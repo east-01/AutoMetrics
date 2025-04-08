@@ -15,8 +15,15 @@ def test_load_dfs_single_month(file_args_single_month, cpu_df, gpu_df):
     assert dfs[1].equals(gpu_df)
 
 def test_ingest_grafana_df_cpu(cpu_df):
-    df, identifier = _ingest_grafana_df(cpu_df)
-    assert identifier == SourceIdentifier(1704096000, 1706284800, "cpu")
+    df, obj1 = _ingest_grafana_df(cpu_df)
+    obj2 = SourceIdentifier(1704096000, 1706284800, "cpu")
+    print(repr(obj1))
+    print(repr(obj2))
+    print(type(obj1.type))
+    print(type(obj2.type))
+    print(obj1 == obj2)
+    print(obj1.__eq__(obj2))
+    assert obj1 == obj2
 
 def test_ingest_grafana_df_gpu(gpu_df):
     df, identifier = _ingest_grafana_df(gpu_df)

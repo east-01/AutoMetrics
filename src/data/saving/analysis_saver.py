@@ -1,9 +1,9 @@
 import os
 import pandas as pd
 
-from program_data.program_data import ProgramData
-from program_data.saving.saver import Saver
-from utils.fileutils import append_line_to_file
+from src.program_data.program_data import ProgramData
+from src.data.saving.saver import Saver
+from src.utils.fileutils import append_line_to_file
 
 class AnalysisSaver(Saver):
     def __init__(self):

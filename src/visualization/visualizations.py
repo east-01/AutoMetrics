@@ -6,8 +6,8 @@ import pandas as pd
 import numpy as np
 import datetime
 
-from program_data.program_data import ProgramData
-from utils.timeutils import get_range_as_month
+from src.program_data.program_data import ProgramData
+from src.utils.timeutils import get_range_as_month
 
 def vizualize():
     prog_data = ProgramData()
