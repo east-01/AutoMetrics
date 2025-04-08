@@ -20,3 +20,11 @@ def src_id_list():
 
 def test_searching(src_id_list):
     assert SourceIdentifier(11, 20, "cpu") in src_id_list
+
+def test_nested_source():
+    srcid = SourceIdentifier(0, 1, "cpu")
+    aid1 = AnalysisIdentifier(srcid, "analysis1")
+    aid2 = AnalysisIdentifier(aid1, "analysis2")
+    aid3 = AnalysisIdentifier(aid2, "analysis3")
+
+    assert srcid == aid3.find_source()

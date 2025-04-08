@@ -38,6 +38,22 @@ class DataRepository():
         self._data[identifier] = data
         self._metadata[identifier] = metadata
 
+    def update_metadata(self, identifier: Identifier, metadata):
+        """
+        Update the metadata for a specific identifier.
+          
+        Args:
+            identifier (Identifier): The identifier for the data and metadata.
+            metadata (dict): The metadata to update
+
+        Raises:
+            ValueError: The identifier is already in the repository, the metadata is None.
+        """
+        if(not self.contains(identifier)):
+            raise ValueError(f"Cannot update metadata for \"{identifier}\" it is not in the repo.")
+
+        self._metadata[identifier] = metadata
+
     def remove(self, identifier: Identifier):
         """
         Remove the corresponding data and metadata from the repository.

@@ -44,6 +44,19 @@ class AnalysisIdentifier(Identifier):
     def __str__(self) -> str:
         return f"{self.analysis}({self.on})"
     
+    def find_source(self) -> SourceIdentifier:
+        """
+        Find the source identifier for this analysis. This is necessary as there can be multiple
+          nested AnalysisIdentifiers.
+
+        Returns:
+            SourceIdentifier: The base source identifier that this analysis is based off of.
+        """
+        on = self.on
+        while(not isinstance(on, SourceIdentifier)):
+            on = on.on
+        return on
+    
 @dataclass(frozen=True)
 class VisIdentifier(Identifier):
     of: Identifier

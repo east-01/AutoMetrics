@@ -1,5 +1,7 @@
 from src.program_data.program_data import ProgramData
-from src.analysis.analysis_impl import analyze_hours_byns, analyze_hours_total, analyze_jobs, analyze_jobs_total, analyze_cpu_only_jobs, analyze_all_jobs_total
+from src.analysis.implementations.hours import *
+from src.analysis.implementations.jobs import *
+from src.analysis.implementations.uniquens import *
 from src.data.data_repository import DataRepository
 from src.data.identifiers.identifier import Identifier, AnalysisIdentifier, SourceIdentifier
 
@@ -31,7 +33,7 @@ def analyze(prog_data: ProgramData):
 
 	print(f"Analysis perform order: {", ".join(analyses_to_perform)}")
 
-	# fulfilled_analyses = set()
+	fulfilled_analyses = set()
 	# Perform each analysis, performing analyses in the outer loop ensures the dependency order
 	#   is maintained.
 	for analysis in analyses_to_perform:
@@ -40,22 +42,24 @@ def analyze(prog_data: ProgramData):
 		analysis_method = analysis_options_methods[analysis]
 
 		if(analysis_filter is None):
-			analysis_method(None)            
+			analysis_method(None)
+			fulfilled_analyses.add(analysis)     
 		else:
 			identifiers = data_repo.filter_ids(analysis_filter)
 
+			if(len(identifiers) > 0):
+				fulfilled_analyses.add(analysis)
+
 			for identifier in identifiers:
 				analysis_identifier = AnalysisIdentifier(identifier, analysis)
-				analysis_result = analysis_method(identifier)
-
-				print("result", analysis_result)
+				analysis_result = analysis_method(identifier, data_repo)
 
 				data_repo.add(analysis_identifier, analysis_result)
-				# fulfilled_analyses.add(analysis)
 				
-	# analyses_to_perform_set = set(analyses_to_perform)
-	# if(analyses_to_perform_set != fulfilled_analyses):
-	#     raise Exception(f"Failed to fulfill all analyses: {list(analyses_to_perform_set-fulfilled_analyses)} (was all data loaded properly? using custom file/directory?)")
+	analyses_to_perform_set = set(analyses_to_perform)
+	if(analyses_to_perform_set != fulfilled_analyses):
+		raise Exception(f"Failed to fulfill all analyses: {list(analyses_to_perform_set-fulfilled_analyses)} (was all data loaded properly? using custom file/directory?)")
+	
 	prog_data.data_repo = data_repo
 
 def get_analysis_order(prog_data: ProgramData):
