@@ -61,9 +61,20 @@ class AnalysisIdentifier(Identifier):
             SourceIdentifier: The base source identifier that this analysis is based off of.
         """
         on = self.on
-        while(not isinstance(on, SourceIdentifier) or on is None):
+        while(on is not None):
+            if(isinstance(on, SourceIdentifier)):
+                return on
             on = on.on
-        return on
+        return None
+
+    def is_meta_analysis(self):
+        """
+        Is this analysis identifier a meta analysis?
+
+        Returns:
+          bool: if this analysis identifier has a root SourceIdentifier
+        """
+        return self.find_source() is None
 
 @dataclass(frozen=True)
 class VisIdentifier(Identifier):

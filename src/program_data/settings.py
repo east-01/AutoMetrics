@@ -85,30 +85,30 @@ settings = {
         "jobstotal": {
             "filter": filter_analyis_type("cpujobstotal"),
             "requires": ["cpujobstotal", "gpujobstotal"]
-        }#,
-        # "cvgpuhours": {
-        #     "filter": None,
-        #     "requires": ["cpuhourstotal", "gpuhourstotal"],
-        #     "vis_options": {
-        #         "type": "timeseries",
-        #         "title": "CPU and GPU hours by month",
-        #         "colors": {
-        #             "cpuhourstotal": "red",
-        #             "gpuhourstotal": "blue"
-        #         }
-        #     }
-        # },
-        # "cvgpujobs": {
-        #     "filter": None,
-        #     "requires": ["cpujobstotal", "gpujobstotal"],
-        #     "vis_options": {
-        #         "type": "timeseries",
-        #         "title": "CPU and GPU jobs by month",
-        #         "colors": {
-        #             "cpujobstotal": "red",
-        #             "gpujobstotal": "blue"
-        #         }
-        #     }
-        # }
+        },
+        "cvgpuhours": {
+            "filter": None,
+            "requires": ["cpuhourstotal", "gpuhourstotal"],
+            "vis_options": {
+                "type": "timeseries",
+                "title": "CPU and GPU hours by month",
+                "color": {
+                    "cpuhourstotal": "red",
+                    "gpuhourstotal": "blue"
+                }
+            }
+        },
+        "cvgpujobs": {
+            "filter": None,
+            "requires": ["cpujobstotal", "gpujobstotal"],
+            "vis_options": {
+                "type": "timeseries",
+                "title": "CPU and GPU jobs by month",
+                "color": {
+                    "cpujobstotal": "red",
+                    "gpujobstotal": "blue"
+                }
+            }
+        }
     }
 }

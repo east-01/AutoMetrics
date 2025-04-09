@@ -39,11 +39,15 @@ def vizualize(prog_data: ProgramData):
 
         vis_options = analysis_options["vis_options"]
 
-        vis_variables = VisualizationVariables(prog_data, identifier, vis_options["variables"])
-        vis_title = vis_variables.apply_variables(vis_options["title"])
+        vis_title = vis_options["title"]
         if("subtext" in vis_options.keys()):
-            vis_subtext = vis_variables.apply_variables(vis_options["subtext"])
-    
+            vis_subtext = vis_options["subtext"]
+
+        if("variables" in vis_options.keys()):
+            vis_variables = VisualizationVariables(prog_data, identifier, vis_options["variables"])
+            vis_title = vis_variables.apply_variables(vis_title)
+            vis_subtext = vis_variables.apply_variables(vis_subtext)
+
         vis_color = vis_options["color"]
 
         # Plot figure based off visualization type

@@ -165,13 +165,6 @@ class DataRepository():
 
         return out_list
 
-    def get_chronological_periods(self):
-        """
-        Returns the set of periods identifying all DataFrames in sorted order.
-        Guarantees: Unique periods, periods are ordered by starting order.
-        """
-        return sorted(set([full_identifier[0] for full_identifier in self.data_blocks.keys()]))
-
     def count(self):
         return len(self._data.keys())
     

@@ -2,6 +2,7 @@ from src.program_data.program_data import ProgramData
 from src.analysis.implementations.hours import *
 from src.analysis.implementations.jobs import *
 from src.analysis.implementations.uniquens import *
+from src.analysis.implementations.meta_analysis import meta_analyze
 from src.data.data_repository import DataRepository
 from src.data.identifiers.identifier import Identifier, AnalysisIdentifier, SourceIdentifier
 
@@ -39,12 +40,20 @@ def analyze(prog_data: ProgramData):
 	for analysis in analyses_to_perform:
 		analysis_settings = prog_data.settings["analysis_settings"][analysis]
 		analysis_filter = analysis_settings["filter"]
-		analysis_method = analysis_options_methods[analysis]
 
 		if(analysis_filter is None):
-			analysis_method(None)
+			# When the analysis filter is none it's considered a meta analysis, see meta_analyze
+			#   description for more details.
+
+			analysis_result = meta_analyze(analysis_settings["requires"], data_repo)
+			analysis_identifier = AnalysisIdentifier(None, analysis)
+
+			data_repo.add(analysis_identifier, analysis_result)
+
 			fulfilled_analyses.add(analysis)     
 		else:
+			analysis_method = analysis_options_methods[analysis]
+
 			identifiers = data_repo.filter_ids(analysis_filter)
 
 			if(len(identifiers) > 0):

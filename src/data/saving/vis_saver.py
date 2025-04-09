@@ -27,10 +27,13 @@ class VizualizationsSaver(Saver):
         for identifier in identifiers:
 
             analysis_id: AnalysisIdentifier = identifier.of
-            src_id = analysis_id.find_source()
+            if(not analysis_id.is_meta_analysis()):
+                src_id = analysis_id.find_source()
 
-            metadata = data_repo.get_metadata(src_id)
-            name_prefix = f"{src_id.type}-{metadata['readable_period']}"
+                metadata = data_repo.get_metadata(src_id)
+                name_prefix = f"{src_id.type}-{metadata['readable_period']}"
+            else:
+                name_prefix = "Entire period"
 
             fig: Figure = data_repo.get_data(identifier)
             fig.savefig(os.path.join(out_path, f"{name_prefix} {analysis_id.analysis}.png"), bbox_inches='tight')
