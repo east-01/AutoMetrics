@@ -17,6 +17,9 @@ class Identifier(ABC):
 
 @dataclass(frozen=True)
 class SourceIdentifier(Identifier):
+    """
+    Identifier for a source Grafana DataFrame.
+    """
     start_ts: int
     end_ts: int
     type: str
@@ -32,6 +35,11 @@ class SourceIdentifier(Identifier):
     
 @dataclass(frozen=True)
 class AnalysisIdentifier(Identifier):
+    """
+    Identifier for an anlysis of something else, can either be a SourceIdentifier or another
+      AnalysisIdentifier. This means there can be multiple layers of AnalysisIdentifiers before you
+      reach the root SourceIdentifier. Use find_source() to find the root.
+    """
     on: Identifier
     analysis: str
 
@@ -53,12 +61,15 @@ class AnalysisIdentifier(Identifier):
             SourceIdentifier: The base source identifier that this analysis is based off of.
         """
         on = self.on
-        while(not isinstance(on, SourceIdentifier)):
+        while(not isinstance(on, SourceIdentifier) or on is None):
             on = on.on
         return on
-    
+
 @dataclass(frozen=True)
 class VisIdentifier(Identifier):
+    """
+    An identifier for a visualization of an analysis.
+    """
     of: Identifier
     graph_type: str
 
@@ -70,3 +81,21 @@ class VisIdentifier(Identifier):
 
     def __str__(self) -> str:
         return f"vis of {self.of}"
+    
+@dataclass(frozen=True)
+class SummaryIdentifier(Identifier):
+    """
+    An identifier for a summary of a period, the start_ts and end_ts will match the corresponding
+      SourceIdentifiers' start_ts and end_ts.
+    """
+    start_ts: int
+    end_ts: int
+
+    def __hash__(self) -> int:
+        return hash((self.start_ts, self.end_ts))
+
+    def __eq__(self, other) -> bool:
+        return isinstance(other, SummaryIdentifier) and self.start_ts == other.start_ts and self.end_ts == other.end_ts
+
+    def __str__(self) -> str:
+        return f"summary of {self.start_ts}-{self.end_ts}"

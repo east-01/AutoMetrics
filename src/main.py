@@ -10,6 +10,11 @@ from src.data.ingest.ingest import ingest
 from src.analysis.analysis import analyze
 from src.visualization.visualizations import vizualize
 from src.data.processors import *
+from src.data.saving.analysis_saver import AnalysisSaver
+from src.data.saving.summary_saver import SummarySaver
+from src.data.saving.dataframe_saver import DataFrameSaver
+from src.data.saving.vis_saver import VizualizationsSaver
+from src.data.summary.summarizer import can_summarize, summarize, print_all_summaries
 
 # Hides warnings for .fillna() calls
 pd.set_option('future.no_silent_downcasting', True)
@@ -21,30 +26,28 @@ print("")
 prog_data.data_repo = ingest(prog_data)
 prog_data.data_repo = process_periods(prog_data.data_repo)
 prog_data.data_repo = generate_metadata(prog_data.data_repo, prog_data.config)
-prog_data.data_repo.print_summary()
+prog_data.data_repo.print_contents()
 print("")
 
 # Analyze dataframes
 analyze(prog_data)
-# prog_data.data_repo.print_summary()
+
+# Summarize analysis results
+if(can_summarize(prog_data)):
+    summarize(prog_data)
 
 # Visualize analysis results
 vizualize(prog_data)
-prog_data.data_repo.print_summary()
+# prog_data.data_repo.print_contents(True)
 
-# Manually visualize meta analysis
+# Save output data, only if an out directory is specified
+out_dir = prog_data.args.outdir
+if(out_dir is not None):
+    if(not os.path.exists(out_dir)):
+        os.mkdir(out_dir)
 
-# Save output data
-# savers = [SummarySaver(), DataFrameSaver(), AnalysisSaver(), VizualizationsSaver()]
+    for saver in [DataFrameSaver(prog_data), AnalysisSaver(prog_data), SummarySaver(prog_data), VizualizationsSaver(prog_data)]:
+        saver.save()
 
-# Only save if an out directory is specified
-# out_dir = ProgramData().args.outdir
-# if(out_dir is not None):
-#     if(not os.path.exists(out_dir)):
-#         os.mkdir(out_dir)
-
-#     for saver in savers:
-#         saver.save()
-
-# if(savers[0].can_summarize):
-#     savers[0].print_all_summaries()    
+# Print summaries
+print_all_summaries(prog_data.data_repo)

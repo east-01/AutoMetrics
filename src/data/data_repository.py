@@ -13,7 +13,7 @@ class DataRepository():
         self._data = {}
         self._metadata = {}
     
-    def add(self, identifier: Identifier, data: object, metadata: dict = {}):
+    def add(self, identifier: Identifier, data: object, metadata: dict = None):
         """
         Add data and metadata to the DataRepository with an Identifier, stores data and metadata
           in their respective dictionaries using the Identifier.
@@ -28,6 +28,9 @@ class DataRepository():
             ValueError: The identifier is already in the repository, the metadata is None.
         """
         
+        if(metadata is None):
+            metadata = {}
+
         if(not issubclass(type(identifier), Identifier)):
             raise ValueError(f"Cannot add data for \"{identifier}\" identifier type \"{type(identifier)}\" is not a subclass of Identifier.")
         if(self.contains(identifier)):
@@ -172,7 +175,7 @@ class DataRepository():
     def count(self):
         return len(self._data.keys())
     
-    def print_summary(self):
+    def print_contents(self, include_metadata=False):
         print("Summary of DataRepository:")
         for identifier in self.get_ids():
             data = self.get_data(identifier)
@@ -181,4 +184,10 @@ class DataRepository():
                 datastr = "DataFrame"
             else:
                 datastr = str(data)
-            print(f"ID {identifier}: \n  {"\n  ".join(datastr.split("\n"))}")
+
+            outstr = f"ID {identifier}: \n  {"\n  ".join(datastr.split("\n"))}"
+            if(include_metadata):
+                metadata = self.get_metadata(identifier)
+                outstr += f"\n  {"\n  ".join(str(metadata).split("\n"))}"
+
+            print(outstr)

@@ -65,7 +65,8 @@ def generate_metadata(data_repo: DataRepository, config):
         
         metadata = data_repo.get_metadata(identifier)
 
-        metadata["readable_period"] = get_range_printable(start_ts, end_ts, config['step'])
+        readable_period = get_range_printable(start_ts, end_ts, config['step'])
+        metadata["readable_period"] = readable_period
 
         fs_compat_name = metadata["readable_period"].replace("/", "_").replace(" ", "T").replace(":", "")
         metadata["out_file_name"] = f"{identifier.type}-{fs_compat_name}"

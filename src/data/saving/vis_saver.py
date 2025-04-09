@@ -1,35 +1,36 @@
 import os
+from matplotlib.figure import Figure
 
 from src.program_data.program_data import ProgramData
+from src.data.data_repository import DataRepository
+from src.data.filters import *
+from src.data.identifiers.identifier import *
 from src.data.saving.saver import Saver
 
 class VizualizationsSaver(Saver):
-    def __init__(self):
-        self.prog_data = ProgramData()
-
+    def __init__(self, prog_data: ProgramData):
+        self.prog_data = prog_data
+        
     def save(self):
-        outdir = self.prog_data.args.outdir
-        data_blocks = self.prog_data.data_repo.data_blocks
 
-        if(self.prog_data.vis_repo is None):
+        data_repo: DataRepository = self.prog_data.data_repo
+        identifiers = data_repo.filter_ids(filter_type(VisIdentifier))
+
+        if(len(identifiers) == 0):
             return
 
-        for identifier in self.prog_data.vis_repo.keys():
-            name_prefix = "Meta analysis"
-            if(identifier != "meta"):
-                data_block = data_blocks[identifier] 
-                name_prefix = f"{data_block['type']}-{data_block['readable_period']}"
+        outdir = self.prog_data.args.outdir
+        out_path = os.path.join(outdir, "visualizations", "")
+        if(not os.path.exists(out_path)):
+            os.mkdir(out_path)
 
-            # Make sure we have visualizations to save
-            vizualizations = self.prog_data.vis_repo[identifier]
-            if(len(vizualizations) == 0):
-                continue
+        for identifier in identifiers:
 
-            # Make sure the directory holding the vizualizations is there
-            vis_dir_path = os.path.join(outdir, f"vizualizations")
-            if(not os.path.exists(vis_dir_path)):
-                os.mkdir(vis_dir_path)
+            analysis_id: AnalysisIdentifier = identifier.of
+            src_id = analysis_id.find_source()
 
-            for analysis in vizualizations.keys():
-                vis = vizualizations[analysis]
-                vis.savefig(os.path.join(vis_dir_path, f"{name_prefix} {analysis}.png"), bbox_inches='tight')
+            metadata = data_repo.get_metadata(src_id)
+            name_prefix = f"{src_id.type}-{metadata['readable_period']}"
+
+            fig: Figure = data_repo.get_data(identifier)
+            fig.savefig(os.path.join(out_path, f"{name_prefix} {analysis_id.analysis}.png"), bbox_inches='tight')
