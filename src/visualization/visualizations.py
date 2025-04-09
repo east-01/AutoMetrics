@@ -11,26 +11,25 @@ from src.data.data_repository import DataRepository
 from src.utils.timeutils import get_range_as_month
 from src.data.filters import *
 from src.visualization.vis_impls import *
+from src.visualization.vis_variables import VisualizationVariables
 from src.program_data.settings import settings
 from src.data.identifiers.identifier import *
 
 def vizualize(prog_data: ProgramData):
     data_repo: DataRepository = prog_data.data_repo
 
-    is_vis_analysis_filter = lambda identifier: filter_type(AnalysisIdentifier) and "vis_options" in settings["analysis_settings"][identifier.analysis].keys()
+    # Filter identifiers that are analyses and have vis options
+    analysis_type_lambda = filter_type(AnalysisIdentifier)
+    is_vis_analysis_filter = lambda identifier: analysis_type_lambda(identifier) and "vis_options" in settings["analysis_settings"][identifier.analysis].keys()
+    identifiers = data_repo.filter_ids(is_vis_analysis_filter)
 
-    for identifier in data_repo.filter_ids(is_vis_analysis_filter):
-        # analyses = prog_data.analysis_repo[identifier]
-        # # Loop through each analysis that can be visualized
-        # for analysis in analyses.keys():
-        #     analysis_options = prog_data.settings["analysis_settings"][analysis]
-        #     # Ensure that this is an analysis we can visualize
-        #     if("vis_options" not in analysis_options.keys()):
-        #         continue
+    # Loop through visualizable analysis identifiers
+    for identifier in identifiers:
 
         analysis = identifier.analysis
         analysis_options = settings["analysis_settings"][analysis]
-        analysis_result = data_repo.get(identifier)
+        analysis_result = data_repo.get_data(identifier)
+
         if(analysis_result is None or not isinstance(analysis_result, pd.DataFrame)):
             print(f"ERROR: Can't visualize analysis {analysis} it's result is not a pd.DataFrame ({type(analysis_result)})")
             continue
@@ -38,48 +37,27 @@ def vizualize(prog_data: ProgramData):
             print(f"WARN: Skipping visualization {analysis} for {identifier} because its DataFrame was empty.")
             continue
 
-        # Ensure that there is a dictionary for this identifier in the vis repo
-        if(identifier not in prog_data.vis_repo.keys()):
-            prog_data.vis_repo[identifier] = {}
-
         vis_options = analysis_options["vis_options"]
-        vis_type = vis_options["type"]
-        variables = vis_options["variables"]
 
-        # Holds the variable name and parsed variable value
-        parsed_variables = {}
-        for variable_name in variables:
-            # The analysis name that the variable wants to load
-            targ_analysis = variables[variable_name]
-            
-            # Resolve the corresponding analysis variable with matching SourceIdentifier
-            variable_value = None
-            for comp_id in data_repo.filter_ids(filter_analyis_type(targ_analysis)):
-                if(comp_id.find_source() == identifier.find_source()):
-                    variable_value = data_repo.get_data(comp_id)
-
-            if(variable_value is None):
-                raise Exception(f"Failed to resolve corresponding analysis variable for {targ_analysis}, current SourceID: {identifier.find_source()}")
-
-            parsed_variables[variable_name] = variable_value
-
-        start_ts, end_ts = identifier[0]
-        range_data = get_range_as_month(start_ts, end_ts, prog_data.config['step'])
-        parsed_variables["MONTH"] = calendar.month_name[range_data["month"]]
-        parsed_variables["YEAR"] = range_data["year"]
-
-        def apply_variables(text):
-            for variable_name in parsed_variables:
-                text = text.replace(f"%{variable_name}%", str(parsed_variables[variable_name]))
-            return text
-
-        vis_title = apply_variables(vis_options["title"])
-        vis_subtext = apply_variables(vis_options["subtext"])
+        vis_variables = VisualizationVariables(prog_data, identifier, vis_options["variables"])
+        vis_title = vis_variables.apply_variables(vis_options["title"])
+        if("subtext" in vis_options.keys()):
+            vis_subtext = vis_variables.apply_variables(vis_options["subtext"])
+    
         vis_color = vis_options["color"]
 
-        vis_identifier = VisIdentifier(identifier, vis_type)
-        fig = plot_simple_bargraph(analysis_result, vis_title, vis_subtext, vis_color)
+        # Plot figure based off visualization type
+        fig = None
+        vis_type = vis_options["type"]
+        if(vis_type == "horizontalbar"):
+            fig = plot_simple_bargraph(analysis_result, vis_title, vis_subtext, vis_color)
+        elif(vis_type == "timeseries"):
+            fig = plot_time_series(analysis_result, vis_title, vis_color)
+        else:
+            raise Exception(f"Don't know how to handle visualization type \"{vis_type}\"")
 
+        # Create vis identifier and add to repo
+        vis_identifier = VisIdentifier(identifier, vis_type)
         data_repo.add(vis_identifier, fig)
 
         plt.close(fig)

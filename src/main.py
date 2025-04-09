@@ -5,10 +5,9 @@ import pandas as pd
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, project_root)
 
-from src.program_data.program_data import ProgramData, load_std_prog_data
+from src.program_data.program_data import load_std_prog_data
 from src.data.ingest.ingest import ingest
 from src.analysis.analysis import analyze
-from src.analysis.meta_analysis import metaanalyze
 from src.visualization.visualizations import vizualize
 from src.data.processors import *
 
@@ -31,6 +30,7 @@ analyze(prog_data)
 
 # Visualize analysis results
 vizualize(prog_data)
+prog_data.data_repo.print_summary()
 
 # Manually visualize meta analysis
 
