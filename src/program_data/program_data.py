@@ -22,8 +22,6 @@ class ProgramData():
         self.args = args
         verify_arguments(self)
 
-        print(f"Will perform analyses: {", ".join(self.args.analysis_options)}")
-
         self.config = config
         verify_config(self)
     

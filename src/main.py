@@ -20,16 +20,21 @@ from src.data.summary.summarizer import can_summarize, summarize, print_all_summ
 pd.set_option('future.no_silent_downcasting', True)
 
 prog_data = load_std_prog_data()
+print(f"Will perform analyses: {", ".join(prog_data.args.analysis_options)}")
 print("")
 
 # Load DataFrames
+print("Starting ingest...")
 prog_data.data_repo = ingest(prog_data)
 prog_data.data_repo = process_periods(prog_data.data_repo)
 prog_data.data_repo = generate_metadata(prog_data.data_repo, prog_data.config)
-prog_data.data_repo.print_contents()
+
+if(prog_data.args.verbose):
+    prog_data.data_repo.print_contents()
 print("")
 
 # Analyze dataframes
+print("Starting analysis...")
 analyze(prog_data)
 
 # Summarize analysis results
@@ -37,8 +42,10 @@ if(can_summarize(prog_data)):
     summarize(prog_data)
 
 # Visualize analysis results
+print("Generating visualizations...")
 vizualize(prog_data)
-# prog_data.data_repo.print_contents(True)
+if(prog_data.args.verbose):
+    prog_data.data_repo.print_contents()
 
 # Save output data, only if an out directory is specified
 out_dir = prog_data.args.outdir

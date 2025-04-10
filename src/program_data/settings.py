@@ -16,6 +16,7 @@ settings = {
     "analysis_settings": {
         "cpuhours": {
             "filter": filter_source_type("cpu"),
+            "types": ["cpu"],
             "requires": [],
             "vis_options": {
                 "type": "horizontalbar",
@@ -29,10 +30,12 @@ settings = {
         },
         "cpuhourstotal": {
             "filter": filter_analyis_type("cpuhours"),
+            "types": ["cpu"],
             "requires": ["cpuhours"]
         },
         "cpujobs": {
             "filter": filter_source_type("cpu"),
+            "types": ["cpu", "gpu"],
             "requires": ["gpujobs"],
             "vis_options": {
                 "type": "horizontalbar",
@@ -46,10 +49,12 @@ settings = {
         },
         "cpujobstotal": {
             "filter": filter_analyis_type("cpujobs"),
+            "types": ["cpu", "gpu"],
             "requires": ["cpujobs"]
         },
         "gpuhours": {
             "filter": filter_source_type("gpu"),
+            "types": ["gpu"],
             "requires": [],
             "vis_options": {
                 "type": "horizontalbar",
@@ -63,10 +68,12 @@ settings = {
         },
         "gpuhourstotal": {
             "filter": filter_analyis_type("gpuhours"),
+            "types": ["gpu"],
             "requires": ["gpuhours"]
         },
         "gpujobs": {
             "filter": filter_source_type("gpu"),
+            "types": ["gpu"],
             "requires": [],
             "vis_options": {
                 "type": "horizontalbar",
@@ -80,14 +87,17 @@ settings = {
         },
         "gpujobstotal": {
             "filter": filter_analyis_type("gpujobs"),
+            "types": ["gpu"],
             "requires": ["gpujobs"]
         },
         "jobstotal": {
             "filter": filter_analyis_type("cpujobstotal"),
+            "types": ["cpu", "gpu"],
             "requires": ["cpujobstotal", "gpujobstotal"]
         },
         "cvgpuhours": {
             "filter": None,
+            "types": ["cpu", "gpu"],
             "requires": ["cpuhourstotal", "gpuhourstotal"],
             "vis_options": {
                 "type": "timeseries",
@@ -100,6 +110,7 @@ settings = {
         },
         "cvgpujobs": {
             "filter": None,
+            "types": ["cpu", "gpu"],
             "requires": ["cpujobstotal", "gpujobstotal"],
             "vis_options": {
                 "type": "timeseries",

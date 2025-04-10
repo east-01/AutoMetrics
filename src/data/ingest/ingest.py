@@ -58,7 +58,7 @@ def _load_dfs(prog_data: ProgramData):
 
     else:
 
-        query_blocks = build_query_list(prog_data.config)
+        query_blocks = build_query_list(prog_data.config, prog_data.args)
         print(f"Loading data from {len(query_blocks)} query/queries:")
 
         for query_block in query_blocks:

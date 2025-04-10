@@ -34,7 +34,15 @@ def parse_unix_ts_range(time_range_str):
     
     return (int(time_range_arr[0]), int(time_range_arr[1]))
 
+def parse_month_year(time_str):
+    try:
+        month_year = datetime.datetime.strptime(time_str, '%B%y')
+        return get_unix_timestamp_range(month_year.month, month_year.year)
+    except ValueError as e:
+        return None
+
 def parse_time_range(time_range_str):
+    # Parse the time range string as a single year (i.e. 2024, 2025)
     try:
         year_num = int(time_range_str)
         # Ensure the year is in modern era
@@ -45,11 +53,17 @@ def parse_time_range(time_range_str):
     except:
         pass
 
-    try:
-        month_year = datetime.datetime.strptime(time_range_str, '%B%y')
-        return get_unix_timestamp_range(month_year.month, month_year.year)
-    except ValueError as e:
-        pass
+    # Try to parse the time range string as either a single month or a range of months (i.e. January24 or January24-March24)
+    if("-" in time_range_str):
+        time_str_arr = time_range_str.split("-")
+        if(len(time_str_arr) == 2):
+            start = parse_month_year(time_str_arr[0])
+            end = parse_month_year(time_str_arr[1])
+            return (start[0], end[1])
+    else:
+        single_month_year = parse_month_year(time_range_str)
+        if(single_month_year):
+            return single_month_year
 
     return parse_unix_ts_range(time_range_str)
 

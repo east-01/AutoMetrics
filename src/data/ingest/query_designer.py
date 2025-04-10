@@ -37,14 +37,14 @@ def build_query_url(config, start, end, type_string):
         "query": query_string
     })
 
-def build_query_list(args):
+def build_query_list(config, args):
     """
     Build a list of queries by analysing the state of the current ProgramData.
     Generates a list of "query blocks" which are dictonaries containing the query URL itself and 
       useful information about said query.
     """
 
-    analysis_options = settings['analysis_options']
+    analysis_options = settings['analysis_settings']
 
     required_types = set()
     for analysis in args.analysis_options:
@@ -57,7 +57,7 @@ def build_query_list(args):
     for period in periods:
         for type in required_types:
             type_string = settings['type_strings'][type]
-            query_url = build_query_url(period[0], period[1], type_string)
+            query_url = build_query_url(config, period[0], period[1], type_string)
             query_list.append({
                 'query': query_url,
                 'type': type,
