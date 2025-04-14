@@ -76,12 +76,18 @@ def print_summary(identifier: SummaryIdentifier, data_repo: DataRepository):
 
     print(f"Summary for {metadata['readable_period']}")
     print("\n  ".join(summary_df.to_string().split("\n")))
+    
     if(len(cpu_df) > 0):
         print(f"  Top 5 CPU namespaces:")
         print("\n    ".join(cpu_df.to_string().split("\n")))
+    else:
+        print(f"  Top 5 CPU namespaces empty.")
+
     if(len(gpu_df) > 0):
         print(f"  Top 5 GPU namespaces:")
         print("\n    ".join(gpu_df.to_string().split("\n")))
+    else:
+        print(f"  Top 5 GPU namespaces empty.")
 
 def print_all_summaries(data_repo: DataRepository):
     identifiers = data_repo.filter_ids(filter_type(SummaryIdentifier))

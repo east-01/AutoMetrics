@@ -62,3 +62,14 @@ if(out_dir is not None):
 
 # Print summaries
 print_all_summaries(prog_data.data_repo)
+
+try:
+    import psutil
+    psutil_available = True
+except ImportError:
+    psutil_available = False
+
+if(psutil_available):
+    process = psutil.Process(os.getpid())
+    memory_info = process.memory_info()
+    print(f"\nMemory usage: {memory_info.rss / (1024 * 1024):.2f} MB")

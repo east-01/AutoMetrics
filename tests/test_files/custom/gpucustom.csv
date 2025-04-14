@@ -1,0 +1,11 @@
+Time,"{container=""notebook"", instance=""10.244.17.213:8443"", job=""kube-state-metrics"", namespace=""ns1"", node=""rci-nrp-gpu-07.sdsu.edu"", phase=""Running"", pod=""jupyter-kkrick-40sdsu-2eedu"", prometheus=""monitoring/k8s"", resource=""nvidia_com_gpu"", uid=""e2c2ecf3-5b3a-4c60-bf85-121995eceb56"", unit=""integer""}","{container=""notebook"", instance=""10.244.247.85:8443"", job=""kube-state-metrics"", namespace=""ns2"", node=""rci-nrp-gpu-07.sdsu.edu"", phase=""Running"", pod=""jupyter-anara-40sdsu-2eedu"", prometheus=""monitoring/k8s"", resource=""nvidia_com_gpu"", uid=""96088d09-e9d6-410c-9b12-c5d4bc56a739"", unit=""integer""}","{container=""notebook"", instance=""10.244.247.85:8443"", job=""kube-state-metrics"", namespace=""ns3"", node=""rci-nrp-gpu-08.sdsu.edu"", phase=""Running"", pod=""jupyter-vkothapally-40sdsu-2eedu"", prometheus=""monitoring/k8s"", resource=""nvidia_com_gpu"", uid=""097db353-102c-49b8-a3fe-94d4a2fe8987"", unit=""integer""}","{container=""notebook"", instance=""10.244.247.85:8443"", job=""kube-state-metrics"", namespace=""ns4"", node=""rci-nrp-gpu-08.sdsu.edu"", phase=""Running"", pod=""jupyter-vkothapally-40sdsu-2eedu"", prometheus=""monitoring/k8s"", resource=""nvidia_com_gpu"", uid=""3a7e66d2-7a09-4c90-b101-37b12eb8a59e"", unit=""integer""}"
+1/8/2024 10:00,1,,,1
+1/18/2024 11:00,1,3,,
+1/18/2024 12:00,1,3,,
+1/18/2024 13:00,,3,,
+1/18/2024 14:00,,3,4,
+1/18/2024 15:00,2,,4,
+1/18/2024 16:00,2,,5,
+1/18/2024 17:00,,,5,
+1/18/2024 18:00,,,,
+1/18/2024 19:00,,,,1

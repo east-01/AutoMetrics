@@ -5,6 +5,16 @@ All notable changes to **AutoTM (Tide Metrics Automation)** will be documented i
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),  
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - XXXX-XX-XX
+### Added
+- Tests for hours analysis
+- Message for empty top 5 CPU/GPU namespaces.
+
+### Changed
+
+### Fixed
+- TODO: Verify file input/output in verify arguments instead of the parser
+
 ## [1.0.1] - 2025-04-14
 ### Added
 - Argument check for periods exceeding the current time.

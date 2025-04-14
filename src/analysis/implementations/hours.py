@@ -3,10 +3,30 @@ import pandas as pd
 
 from src.data.data_repository import DataRepository
 from src.analysis.grafana_df_cleaning import has_time_column, clear_time_column
-from src.data.ingest.grafana_df_analyzer import extract_column_data
 
 def analyze_hours_byns(identifier, data_repo: DataRepository):
+    """
+    Unpack the Grafana DataFrame from the DataRepository and perform _analyze_hours_byns_ondf on
+        it.
+
+    Args:
+        identifier (SourceIdentifier): The identifier for the Grafana DataFrame.
+    Returns:
+        pd.DataFrame: Result from _analyze_hours_byns_ondf.
+    """
+
     df = data_repo.get_data(identifier)
+    return _analyze_hours_byns_ondf(df)
+
+def _analyze_hours_byns_ondf(df):
+    """
+    Analyze hours by namespace.
+
+    Args:
+        df (pd.DataFrame): The Grafana DataFrame to analyze
+    Returns:
+        pd.DataFrame: The result DataFrame with columns [Namespace, Hours].    
+    """
 
     if(has_time_column(df)):
         df = clear_time_column(df)
@@ -34,6 +54,16 @@ def analyze_hours_byns(identifier, data_repo: DataRepository):
     return namespace_totals_df
 
 def analyze_hours_total(identifier, data_repo: DataRepository):
+    """
+    Unpack the analysis DataFrame from the DataRepository and sum the Hours column.
+
+    Args:
+        identifier (AnalysisIdentifier): The identifier for the previously computed hours by
+            namespace analysis.
+    Returns:
+        float: The sum of the hours column.
+    """
+
     # Retrieve the corresponding analysis thats already been performed
     df = data_repo.get_data(identifier)
     return df['Hours'].sum()
