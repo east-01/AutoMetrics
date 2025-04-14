@@ -34,37 +34,61 @@ def analyze(prog_data: ProgramData):
 
 	print(f"Analysis perform order: {", ".join(analyses_to_perform)}")
 
+	# Fulfilled analyses is used to ensure all analysis that were requested were performed. All
+	#   analyses may not be fulfilled if the user provides an input directory without all the
+	#   required csv files. For example, the user requests gpuhours but only provides cpu dfs.
 	fulfilled_analyses = set()
-	# Perform each analysis, performing analyses in the outer loop ensures the dependency order
-	#   is maintained.
+
 	for analysis in analyses_to_perform:
 		analysis_settings = prog_data.settings["analysis_settings"][analysis]
-		analysis_filter = analysis_settings["filter"]
 
-		if(analysis_filter is None):
-			# When the analysis filter is none it's considered a meta analysis, see meta_analyze
-			#   description for more details.
+		# When the analysis settings do not have a filter it's considered a meta analysis, see
+		#   meta_analyze description for more details.
+		is_standard_analysis = "filter" in analysis_settings.keys()
 
-			analysis_result = meta_analyze(analysis_settings["requires"], data_repo)
-			analysis_identifier = AnalysisIdentifier(None, analysis)
+		if(is_standard_analysis):
+			# Perform a standard analysis.
 
-			data_repo.add(analysis_identifier, analysis_result)
-
-			fulfilled_analyses.add(analysis)     
-		else:
-			analysis_method = analysis_options_methods[analysis]
-
+			# Get filter and apply to data_repo, the filter finds the Identifiers that the analysis
+			#   will use in its calculation.
+			analysis_filter = analysis_settings["filter"]
 			identifiers = data_repo.filter_ids(analysis_filter)
 
-			if(len(identifiers) > 0):
-				fulfilled_analyses.add(analysis)
+			# If the length of the target identifiers is zero then we can't perform and fulfill 
+			#   the analysis.
+			if(len(identifiers) == 0):
+				continue
+
+			# Get the analysis method implementation for this specific analysis.
+			# For example, if the analysis is cpuhours the analysis_method will be 
+			#   src/analysis/implementations/analyze_hours_byns.
+			analysis_method = analysis_options_methods[analysis]
+
+			print(f"  Performing {analysis} on {len(identifiers)} target(s).")
 
 			for identifier in identifiers:
-				analysis_identifier = AnalysisIdentifier(identifier, analysis)
 				analysis_result = analysis_method(identifier, data_repo)
 
+				# Generate identifier and add to repository.
+				analysis_identifier = AnalysisIdentifier(identifier, analysis)
 				data_repo.add(analysis_identifier, analysis_result)
+
+			fulfilled_analyses.add(analysis)
+
+		else:
+			# Perform a meta analysis.
+
+			print(f"  Performing {analysis}.")
+
+			analysis_result = meta_analyze(analysis_settings["requires"], data_repo)
+
+			# Generate identifier and add to repository.
+			analysis_identifier = AnalysisIdentifier(None, analysis)
+			data_repo.add(analysis_identifier, analysis_result)
+
+			fulfilled_analyses.add(analysis)     			
 				
+	# Check with fulfilled_analyses to ensure all we're properly fulfilled.
 	analyses_to_perform_set = set(analyses_to_perform)
 	if(analyses_to_perform_set != fulfilled_analyses):
 		raise Exception(f"Failed to fulfill all analyses: {list(analyses_to_perform_set-fulfilled_analyses)} (was all data loaded properly? using custom file/directory?)")

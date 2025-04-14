@@ -1,6 +1,6 @@
 import pandas as pd
 
-from src.data.identifiers.identifier import Identifier
+from src.data.identifiers.identifier import Identifier, SummaryIdentifier
 
 class DataRepository():
     """
@@ -175,6 +175,8 @@ class DataRepository():
             datastr = ""
             if(isinstance(data, pd.DataFrame)):
                 datastr = "DataFrame"
+            elif(isinstance(identifier, SummaryIdentifier)):
+                datastr = "Summary tuple"
             else:
                 datastr = str(data)
 

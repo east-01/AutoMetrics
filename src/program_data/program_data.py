@@ -3,7 +3,7 @@
 import pandas as pd
 
 from src.program_data.settings import settings
-from src.program_data.arguments import load_arguments, verify_arguments
+from src.program_data.arguments import load_arguments, verify_arguments, ArgumentException
 from src.program_data.config import load_config, verify_config
 from src.data.data_repository import DataRepository
 
@@ -20,7 +20,11 @@ class ProgramData():
         self.settings = settings
 
         self.args = args
-        verify_arguments(self)
+        try:
+            verify_arguments(self)
+        except ArgumentException as e:
+            print(f"Invalid arguments: {e}")
+            exit()
 
         self.config = config
         verify_config(self)

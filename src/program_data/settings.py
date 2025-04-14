@@ -96,7 +96,6 @@ settings = {
             "requires": ["cpujobstotal", "gpujobstotal"]
         },
         "cvgpuhours": {
-            "filter": None,
             "types": ["cpu", "gpu"],
             "requires": ["cpuhourstotal", "gpuhourstotal"],
             "vis_options": {
@@ -109,7 +108,6 @@ settings = {
             }
         },
         "cvgpujobs": {
-            "filter": None,
             "types": ["cpu", "gpu"],
             "requires": ["cpujobstotal", "gpujobstotal"],
             "vis_options": {

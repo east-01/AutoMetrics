@@ -40,21 +40,25 @@ analyze(prog_data)
 # Summarize analysis results
 if(can_summarize(prog_data)):
     summarize(prog_data)
+print("")
 
 # Visualize analysis results
 print("Generating visualizations...")
 vizualize(prog_data)
 if(prog_data.args.verbose):
     prog_data.data_repo.print_contents()
+print("")
 
 # Save output data, only if an out directory is specified
 out_dir = prog_data.args.outdir
 if(out_dir is not None):
+    print("Saving data...")    
     if(not os.path.exists(out_dir)):
         os.mkdir(out_dir)
 
     for saver in [DataFrameSaver(prog_data), AnalysisSaver(prog_data), SummarySaver(prog_data), VizualizationsSaver(prog_data)]:
         saver.save()
+    print("")
 
 # Print summaries
 print_all_summaries(prog_data.data_repo)

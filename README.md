@@ -26,14 +26,14 @@ Where \<analyses\> is a list of analysis options you want to perform, separated 
 
 Analysis options must be spelled correctly and listed without spaces. Here is an example of a valid command collecting the amount of GPU hours and unique namespaces.
 ```
-python tidemetrics.py gpuhours,uniquens
+python src/main.py gpuhours,uniquens
 ```
 You can use `all` to denote all analysis options, so if you wanted to collect analyses for all of the following options you would do:
 ```
-python tidemetrics.py all
+python src/main.py all
 ```
 
-Option | Description | Visualization type (if applicable) |
+Option | Description | Visualization type |
 -------|-------------|--------------------|
 cpuhours | The amount of CPU hours consumed by each namespace. | Horizontal bar
 cpuhourstotal | The total amount of CPU hours consumed by all namespaces. | N/A
@@ -53,7 +53,7 @@ Command line arguments can be used to greatly fine tune the source of the data. 
 
 #### PromQL related arguments
 
-These arguments should not be used when inputting a custom file/directory.
+These arguments should not be used when inputting a custom file/directory. If either the start or end times of the period exceed the current time, AutoTM will throw an error.
 
 Argument | Description | Example usage
 ---------|-------------|--------------

@@ -113,7 +113,7 @@ def verify_arguments(prog_data):
     args = prog_data.args
 
     if(not isinstance(args.analysis_options, list)):
-        raise Exception("Analysis options is not a list.")
+        raise ArgumentException("Analysis options is not a list.")
 
     # Populate additional analyses to perform from requirements
     for to_perform in args.analysis_options:
@@ -122,13 +122,14 @@ def verify_arguments(prog_data):
                 print(f"Added additional analysis \"{requirement}\" as it is a requirement of \"{to_perform}\"")
                 args.analysis_options.append(requirement)
 
-    if(args.file is not None):
+    if(args.file is not None and args.period is not None):
         # If the file exists, provide warnings about other arguments that won't be used
-        if(args.period is not None):
-            print("Warning: You provided at least one argument [type/period] that is overridden by the --file flag. You may see a different output than what you we're expecting.")
-    else:
-        if(args.period is None):
-            # Gets current UNIX timestamp as an integer
-            now = int(time.time())
-            args.period = (now-60*60, now)
-            print(f"Populating time period argument with default \"{args.period}\"")
+        raise ArgumentException("Both file and period arguments provided, these arguments are mutually exclusive and you must select one.")
+
+    if(args.period is not None):
+        now = int(time.time())
+        if(args.period[0] > now or args.period[1] > now):
+            raise ArgumentException("Either the start or end times of the period exceeds current time.")
+
+class ArgumentException(Exception):
+    pass
