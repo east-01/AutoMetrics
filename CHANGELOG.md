@@ -9,10 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Tests for hours analysis
 - Message for empty top 5 CPU/GPU namespaces.
+- Docstrings for analysis implementations
 
 ### Changed
+- Refactored jobs analysis implementations for consistency.
 
 ### Fixed
+- README.md output example
 - TODO: Verify file input/output in verify arguments instead of the parser
 
 ## [1.0.1] - 2025-04-14

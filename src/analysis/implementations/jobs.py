@@ -4,12 +4,76 @@ import pandas as pd
 from src.data.data_repository import DataRepository
 from src.data.identifiers.identifier import SourceIdentifier, AnalysisIdentifier
 from src.analysis.grafana_df_cleaning import clear_duplicate_uids, clear_blacklisted_uids, has_time_column, clear_time_column
-from src.data.ingest.grafana_df_analyzer import extract_column_data
 
-def _analyze_jobs_final(df, strip_cols_0=True):
+def analyze_jobs_byns(identifier, data_repo: DataRepository):
+    """
+    Unpack the Grafana DataFrame from the DataRepository and perform _analyze_jobs_byns_ondf on it.
+    
+    Args:
+        identifier (SourceIdentifier): The identifier for the Grafana DataFrame.
+    Returns:
+        pd.DataFrame: Result from _analyze_jobs_byns_ondf.
+    """
+
+    df = data_repo.get_data(identifier)
+    return _analyze_jobs_byns_ondf(df)
+
+def analyze_cpu_only_jobs_byns(identifier: SourceIdentifier, data_repo: DataRepository):
+    """
+    Unpack the CPU Grafana DataFrame from the DataRepository and perform _analyze_jobs_byns_ondf on 
+        it. Separate from the standard implementation of analyze_jobs_byns because we have to find
+        the corresponding GPU DataFrame and use the uids from that as blacklisted uids.
+    Maintains the sentiment that if the job exists in both CPU and GPU DataFrames it is NOT
+        considered a CPU only job.
+    
+    Args:
+        identifier (SourceIdentifier): The identifier for the Grafana DataFrame.
+    Returns:
+        pd.DataFrame: Result from _analyze_jobs_byns_ondf.
+    """
+
+    # We have to locate the corresponding GPU data block
+    # The UIDs in the GPU will be used to clear blacklisted IDs
+    gpu_identifier = SourceIdentifier(identifier.start_ts, identifier.end_ts, "gpu")
+    if(not data_repo.contains(gpu_identifier)):
+        raise Exception("Failed to analyze cpu only jobs, the corresponding gpu data_block could not be found.")
+    
+    gpu_df = data_repo.get_data(gpu_identifier)
+    if(has_time_column(gpu_df)):
+        gpu_df = clear_time_column(gpu_df)
+
+    gpu_greater_than_zero_cols = [col for col in gpu_df.columns if gpu_df[col].sum() > 0]
+    gpu_df = gpu_df[gpu_greater_than_zero_cols].fillna(0)
+    gpu_uuid = set(gpu_df.columns.str.extract(r'uid="([^"]+)"')[0].dropna())
+
+    # Unpack cpu dataframe
+    df = data_repo.get_data(identifier)
+
+    return _analyze_jobs_byns_ondf(df, gpu_uuid, True)
+
+def _analyze_jobs_byns_ondf(df, blacklisted_uuids=None, strip_cols_0=True):
+    """
+    Analyze jobs by namespace. Calculates the unique amount of uids per namespace and sums them.
+
+    Args:
+        df (pd.DataFrame): The Grafana DataFrame to analyze
+        blacklisted_uuids (list[str]): The blacklisted uuids to exclude from the job count.
+        strip_cols_0 (bool): boolean to strip columns that total 0.
+    Returns:
+        pd.DataFrame: The result DataFrame with columns [Namespace, Count].    
+    """
+
+    # Preprocessing steps, clear time column, duplicate uids, and blacklisted uids.
+    if(has_time_column(df)):
+        df = clear_time_column(df)
+
+    df = clear_duplicate_uids(df)
+    if(blacklisted_uuids is not None):
+        df = clear_blacklisted_uids(df, blacklisted_uuids)
+
     df = df.fillna(0)
 
-    # Create a data frame where the columns 
+    # If we want to strip the columns with 0 total values
     if(strip_cols_0):
         greater_than_zero_columns = [col for col in df.columns if df[col].sum() > 0]
 
@@ -23,44 +87,32 @@ def _analyze_jobs_final(df, strip_cols_0=True):
 
     return namespace_counts_sorted
 
-def analyze_jobs(identifier, data_repo: DataRepository):
-    df = data_repo.get_data(identifier)
-    if(has_time_column(df)):
-        df = clear_time_column(df)
-
-    # Load data frame, dropping columns with duplicate uids
-    df = clear_duplicate_uids(df)
-    return _analyze_jobs_final(df)
-
-def analyze_cpu_only_jobs(identifier: SourceIdentifier, data_repo: DataRepository):
-    # We have to locate the corresponding GPU data block
-    # The UIDs in the GPU will be used to clear blacklisted IDs
-    gpu_identifier = SourceIdentifier(identifier.start_ts, identifier.end_ts, "gpu")
-    if(not data_repo.contains(gpu_identifier)):
-        raise Exception("Failed to analyze cpu only jobs, the corresponding gpu data_block could not be found.")
-    
-    gpu_df = data_repo.get_data(gpu_identifier)
-    if(has_time_column(gpu_df)):
-        gpu_df = clear_time_column(gpu_df)
-
-    df = data_repo.get_data(identifier)
-    if(has_time_column(df)):
-        df = clear_time_column(df)
-
-    gpu_greater_than_zero_cols = [col for col in gpu_df.columns if gpu_df[col].sum() > 0]
-    gpu_df = gpu_df[gpu_greater_than_zero_cols].fillna(0)
-    gpu_uuid = set(gpu_df.columns.str.extract(r'uid="([^"]+)"')[0].dropna())
-
-    df = clear_duplicate_uids(df)
-    df = clear_blacklisted_uids(df, gpu_uuid)
-
-    return _analyze_jobs_final(df, True)
-
 def analyze_jobs_total(identifier, data_repo: DataRepository):
+    """
+    Unpack the jobs analysis DataFrame from the DataRepository and sum the Count column.
+
+    Args:
+        identifier (AnalysisIdentifier): The identifier for the previously computed jobs by
+            namespace analysis.
+    Returns:
+        int: The sum of the count column.
+    """
+
     df = data_repo.get_data(identifier)
     return df['Count'].sum()
 
 def analyze_all_jobs_total(cpu_identifier: AnalysisIdentifier, data_repo: DataRepository):
+    """
+    Unpack the total jobs analysis for both the CPU and GPU DataFrame from the DataRepository and 
+        add them together.
+
+    Args:
+        cpu_identifier (AnalysisIdentifier): The identifier for the previously computed jobs total
+            analysis.
+    Returns:
+        int: The sum of the count column.
+    """
+
     src_id = cpu_identifier.find_source()
 
     cpu_jobs_tot = data_repo.get_data(cpu_identifier)

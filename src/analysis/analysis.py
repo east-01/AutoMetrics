@@ -8,11 +8,11 @@ from src.data.identifiers.identifier import Identifier, AnalysisIdentifier, Sour
 analysis_options_methods = {
 	"cpuhours": analyze_hours_byns,
 	"cpuhourstotal": analyze_hours_total,
-	"cpujobs": analyze_cpu_only_jobs,
+	"cpujobs": analyze_cpu_only_jobs_byns,
 	"cpujobstotal": analyze_jobs_total,
 	"gpuhours": analyze_hours_byns,
 	"gpuhourstotal": analyze_hours_total,
-	"gpujobs": analyze_jobs,
+	"gpujobs": analyze_jobs_byns,
 	"gpujobstotal": analyze_jobs_total,
 	"jobstotal": analyze_all_jobs_total
 }

@@ -82,8 +82,7 @@ These arguments can be used with either a PromQL query or custom file/directory 
 
 Argument | Description | Example usage
 ---------|-------------|--------------
--o or --outdir | The directory that the result files will be placed in. | -o 
-"./output"
+-o or --outdir | The directory that the result files will be placed in. | -o "./output"
 -v | Verbose messaging in the console. | -v
 
 ### Configuration
