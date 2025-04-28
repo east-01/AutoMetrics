@@ -88,8 +88,7 @@ def parse_file_list(path):
                 file_paths.append(os.path.join(root, file))
         return file_paths
     else:
-        print(f"Can't parse file list, path provided \"{path}\" is neither a file or directory.")
-        raise Exception()
+        raise ArgumentException(f"Can't parse file list, path provided \"{path}\" is neither a file or directory.")
 
 def load_arguments():
     """

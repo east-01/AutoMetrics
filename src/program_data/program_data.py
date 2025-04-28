@@ -11,7 +11,14 @@ def load_std_prog_data():
     """
     Loads the ProgramData in the context of a standard running program.
     """
-    return ProgramData(load_arguments(), load_config())
+
+    try:
+        args = load_arguments()
+    except ArgumentException as e:
+        print(f"Invalid arguments: {e}")
+        exit()
+
+    return ProgramData(args, load_config())
 
 class ProgramData():
     def __init__(self, args, config):

@@ -5,9 +5,10 @@ All notable changes to **AutoTM (Tide Metrics Automation)** will be documented i
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),  
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.1.0] - XXXX-XX-XX
+## [1.0.2] - 2025-04-28
 ### Added
 - Tests for hours analysis
+- Tests for jobs analysis
 - Message for empty top 5 CPU/GPU namespaces.
 - Docstrings for analysis implementations
 
@@ -16,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - README.md output example
-- TODO: Verify file input/output in verify arguments instead of the parser
+- Verification of file arguments is cleaner
 
 ## [1.0.1] - 2025-04-14
 ### Added
