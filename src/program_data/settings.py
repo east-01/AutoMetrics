@@ -31,7 +31,12 @@ settings = {
         "cpuhourstotal": {
             "filter": filter_analyis_type("cpuhours"),
             "types": ["cpu"],
-            "requires": ["cpuhours"]
+            "requires": ["cpuhours", "cpuhoursavailable"]
+        },
+        "cpuhoursavailable": {
+            "filter": filter_source_type("cpu"),
+            "types": ["cpu"],
+            "requires": []
         },
         "cpujobs": {
             "filter": filter_source_type("cpu"),
@@ -70,6 +75,11 @@ settings = {
             "filter": filter_analyis_type("gpuhours"),
             "types": ["gpu"],
             "requires": ["gpuhours"]
+        },
+        "gpuhoursavailable": {
+            "filter": filter_source_type("gpu"),
+            "types": ["gpu"],
+            "requires": []
         },
         "gpujobs": {
             "filter": filter_source_type("gpu"),
@@ -120,10 +130,20 @@ settings = {
             }
         }
     },
-    "cpu_core_per_node_tide": {
-        "tide_cpu": 62,
-        "gpu_a100": 62,
-        "gpu_l40": 22,
+    # Information about hardware configurations for each node.
+    # NOTE: CPU core count is -2 the real amount to account for reserved cores.
+    "node_infos": {
+        "rci-tide-cpu": {
+            "cpu": 62,
+            "gpu": 4
+        },
+        "rci-tide-gpu": { # Targets L40 GPUs
+            "cpu": 22,
+            "gpu": 4
+        },
+        "rci-nrp-gpu": { # Targets A100 GPUs
+            "cpu": 62,
+            "gpu": 4
+        }
     }
-
 }

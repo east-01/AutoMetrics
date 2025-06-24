@@ -1,7 +1,7 @@
 import pytest
 import pandas as pd
 
-from src.analysis.implementations.hours import _analyze_hours_byns_ondf
+from src.analysis.implementations.hours import _analyze_hours_byns_ondf, _analyze_available_hours_ondf
 
 def test_hours_customgpu(customgpudf):
     result = _analyze_hours_byns_ondf(customgpudf)
@@ -38,3 +38,7 @@ def test_hours_cpujan24(jan24cpudf):
 def test_hours_cpufeb24(feb24cpudf):
     result = _analyze_hours_byns_ondf(feb24cpudf)
     assert sum(result["Hours"]) == 23088
+
+def test_available_hours(mar25cpudf):
+    result = _analyze_available_hours_ondf(mar25cpudf, "cpu", 1740816000, 1743490799)
+    print(result)
