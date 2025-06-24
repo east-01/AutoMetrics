@@ -119,5 +119,11 @@ settings = {
                 }
             }
         }
+    },
+    "cpu_core_per_node_tide": {
+        "tide_cpu": 62,
+        "gpu_a100": 62,
+        "gpu_l40": 22,
     }
+
 }

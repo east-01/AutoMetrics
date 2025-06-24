@@ -4,6 +4,8 @@ from src.analysis.implementations.jobs import *
 from src.analysis.implementations.meta_analysis import meta_analyze
 from src.data.data_repository import DataRepository
 from src.data.identifiers.identifier import Identifier, AnalysisIdentifier, SourceIdentifier
+from src.data.filters import filter_type
+from src.analysis.grafana_df_cleaning import extract_column_data
 
 analysis_options_methods = {
 	"cpuhours": analyze_hours_byns,
@@ -17,6 +19,8 @@ analysis_options_methods = {
 	"jobstotal": analyze_all_jobs_total
 }
 
+
+
 def analyze(prog_data: ProgramData):
 	"""
 	Analyze the current ProgramData for the target analysis options selected. Analysis options are
@@ -28,8 +32,11 @@ def analyze(prog_data: ProgramData):
 	  use them.
 	"""
 	data_repo: DataRepository = prog_data.data_repo
-
+	
 	analyses_to_perform = get_analysis_order(prog_data)
+
+	
+
 
 	print(f"Analysis perform order: {", ".join(analyses_to_perform)}")
 
@@ -67,7 +74,10 @@ def analyze(prog_data: ProgramData):
 
 			for identifier in identifiers:
 				analysis_result = analysis_method(identifier, data_repo)
-
+				if analysis == "cpuhourstotal":
+					max_hours = check_if_over_monthly_hours(identifier, data_repo, prog_data)
+					import sys
+					sys.exit()
 				# Generate identifier and add to repository.
 				analysis_identifier = AnalysisIdentifier(identifier, analysis)
 				data_repo.add(analysis_identifier, analysis_result)
@@ -86,13 +96,43 @@ def analyze(prog_data: ProgramData):
 			data_repo.add(analysis_identifier, analysis_result)
 
 			fulfilled_analyses.add(analysis)     			
-				
+			# print("test")
+			# max_hours = check_if_over_monthly_hours(identifier, data_repo, prog_data)
+			# print(analysis)
+			# import sys
+			# sys.exit()
 	# Check with fulfilled_analyses to ensure all we're properly fulfilled.
 	analyses_to_perform_set = set(analyses_to_perform)
 	if(analyses_to_perform_set != fulfilled_analyses):
 		raise Exception(f"Failed to fulfill all analyses: {list(analyses_to_perform_set-fulfilled_analyses)} (was all data loaded properly? using custom file/directory?)")
-	
+
 	prog_data.data_repo = data_repo
+
+def check_if_over_monthly_hours(identifier, data_repo,prog_data):
+	
+	# start_ts = identifier.on.start_ts
+	# end_ts = identifier.on.end_ts
+	# print(start_ts)
+	# print(end_ts)
+	# total_hours_month = (end_ts-start_ts+1)/3600
+	# print("total hours in month ", total_hours_month)
+	# print(filter_ids(SourceIdentifier))
+	source_id = data_repo.filter_ids(filter_type(SourceIdentifier))
+	print(len(source_id))
+	for id in source_id:
+		print(id)
+		col_names = data_repo.get_data(id).columns
+		for col_name in col_names[1:]:
+			col_data = extract_column_data(col_name)
+			print(col_data)
+
+	print(data_repo.print_contents())
+
+	cpu_core_per_node_tide = prog_data.settings["cpu_core_per_node_tide"]
+	num_cpu_cores = cpu_core_per_node_tide['cpu']
+	
+	# total_hours_month * cpu * nodes 
+	return 
 
 def get_analysis_order(prog_data: ProgramData):
 	"""
@@ -103,7 +143,7 @@ def get_analysis_order(prog_data: ProgramData):
 
 	user_analysis_options = set(prog_data.args.analysis_options)
 	analysis_options = prog_data.settings["analysis_settings"]
-
+	
 	# Only iterate n**2 times, any further iterations would mean there is an impossible/circular dependency
 	for _ in range(0, len(analysis_options.keys())**2):
 		for analysis_key in list(user_analysis_options):
