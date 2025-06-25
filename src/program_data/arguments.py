@@ -104,6 +104,7 @@ def load_arguments():
 
     parser.add_argument('-f', '--file', dest='file', type=parse_file_list, help='A local file/directory to be used instead of polling Prometheus.')
     parser.add_argument('-o', '--outdir', dest='outdir', type=str, help='The directory to send output files to.')
+    parser.add_argument('-c', '--config', dest="config", type=str, help="The location of the config file to use.", default="./config.yaml")
     parser.add_argument('-v', dest='verbose', action='store_true', help="Enable verbose output.")
 
     return parser.parse_args()

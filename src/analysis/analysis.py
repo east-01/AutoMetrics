@@ -81,11 +81,11 @@ def analyze(prog_data: ProgramData):
 
 			print(f"  Performing {analysis}.")
 
-			analysis_result = meta_analyze(analysis_settings["requires"], data_repo)
+			analysis_result, analysis_metadata = meta_analyze(analysis_settings["requires"], data_repo)
 
 			# Generate identifier and add to repository.
 			analysis_identifier = AnalysisIdentifier(None, analysis)
-			data_repo.add(analysis_identifier, analysis_result)
+			data_repo.add(analysis_identifier, analysis_result, analysis_metadata)
 
 			fulfilled_analyses.add(analysis)     			
 				

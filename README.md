@@ -24,9 +24,9 @@ Where \<analyses\> is a list of analysis options you want to perform, separated 
 
 ### Analysis options
 
-Analysis options must be spelled correctly and listed without spaces. Here is an example of a valid command collecting the amount of GPU hours and unique namespaces.
+Analysis options must be spelled correctly and listed without spaces. Here is an example of a valid command collecting the amount of GPU hours and GPU jobs.
 ```
-python src/main.py gpuhours,uniquens
+python src/main.py gpuhours,gpujobs
 ```
 You can use `all` to denote all analysis options, so if you wanted to collect analyses for all of the following options you would do:
 ```
@@ -37,8 +37,10 @@ Option | Description | Visualization type |
 -------|-------------|--------------------|
 cpuhours | The amount of CPU hours consumed by each namespace. | Horizontal bar
 cpuhourstotal | The total amount of CPU hours consumed by all namespaces. | N/A
+cpuhoursavailable | The amount of CPU core hours available during time period. | N/A
 gpuhours | The amount of GPU hours consumed by each namespace. | Horizontal bar
 gpuhourstotal | The total amount of GPU hours consumed by all namespaces. | N/A
+gpuhoursavailable | The total amount of GPU hours available during time period. | N/A
 cpujobs | The amount of unique *cpu only* jobs for each namespace. | Horizontal bar
 cpujobstotal | The total amount of cpu jobs between all namespaces. | N/A
 gpujobs | The amount of unique jobs for each namespace. | Horizontal bar
@@ -46,6 +48,7 @@ gpujobstotal | The total amount of gpu jobs between all namespaces. | N/A
 jobstotal | The total amount of cpu and gpu jobs between all namespaces. | N/A
 cvgpuhours | The total amount of cpu and gpu hours compared across all periods. | Time series
 cvgpujobs | The total amount of cpu and gpu jobs compared across all periods. | Time series
+utilization | A comparison of resource hours used vs available across all periods. | N/A
 
 ### Command line arguments
 
@@ -83,6 +86,7 @@ These arguments can be used with either a PromQL query or custom file/directory 
 Argument | Description | Example usage
 ---------|-------------|--------------
 -o or --outdir | The directory that the result files will be placed in. | -o "./output"
+-c or --config | The .yaml config file that you want to use. | -c "./config.yaml"
 -v | Verbose messaging in the console. | -v
 
 ### Configuration

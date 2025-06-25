@@ -5,6 +5,7 @@ from src.program_data.program_data import ProgramData
 from src.data.data_repository import DataRepository
 from src.data.identifiers.identifier import *
 from src.data.filters import *
+from src.utils.timeutils import get_range_printable
 
 def meta_analyze(analyses: list, data_repo: DataRepository):
     """
@@ -15,14 +16,28 @@ def meta_analyze(analyses: list, data_repo: DataRepository):
 
     df = pd.DataFrame(columns=(["Period"]+analyses))
 
+    # TODO: This seen() solution is temporary until I can bring in the dev versions period
+    #   identifier. With this we can filter by TimeStampIdentifier then make that a set.
+    seen = set()
+
+    # identifiers = data_repo.filter_ids(filter_type(TimeStampIdentifier))
     src_identifiers = data_repo.filter_ids(filter_type(SourceIdentifier))
     src_identifiers.sort(key=lambda identifier: identifier.start_ts)
+
+    periods = [] # Periods to be stored in meta data
+
     for identifier in src_identifiers:
         start_ts = identifier.start_ts
         end_ts = identifier.end_ts
         period = (start_ts, end_ts)
+        if(period in seen):
+            continue
 
-        row = [period]
+        seen.add(period)
+        periods.append(period)
+
+        readable_period = get_range_printable(start_ts, end_ts, 3600)
+        row = [readable_period]
 
         for analysis in analyses:
             analysis_id = resolve_analysis(data_repo, start_ts, end_ts, analysis)
@@ -42,7 +57,11 @@ def meta_analyze(analyses: list, data_repo: DataRepository):
 
         df.loc[len(df)] = row
     
-    return df
+    metadata = {
+        "periods": periods
+    }
+
+    return df, metadata
 
 def resolve_analysis(data_repo: DataRepository, start_ts, end_ts, analysis):
     """

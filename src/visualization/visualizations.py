@@ -36,6 +36,9 @@ def vizualize(prog_data: ProgramData):
         if(len(analysis_result) == 0):
             print(f"WARN: Skipping visualization {analysis} for {identifier} because its DataFrame was empty.")
             continue
+        # Skip visualization if the option doesn't exist.
+        if("vis_options" not in analysis_options or analysis_options["vis_options"] == None):
+            continue
 
         vis_options = analysis_options["vis_options"]
 
@@ -54,9 +57,9 @@ def vizualize(prog_data: ProgramData):
         fig = None
         vis_type = vis_options["type"]
         if(vis_type == "horizontalbar"):
-            fig = plot_simple_bargraph(analysis_result, vis_title, vis_subtext, vis_color)
+            fig = plot_simple_bargraph(data_repo, identifier, vis_title, vis_subtext, vis_color)
         elif(vis_type == "timeseries"):
-            fig = plot_time_series(analysis_result, vis_title, vis_color)
+            fig = plot_time_series(data_repo, identifier, vis_title, vis_color)
         else:
             raise Exception(f"Don't know how to handle visualization type \"{vis_type}\"")
 
@@ -65,20 +68,5 @@ def vizualize(prog_data: ProgramData):
         data_repo.add(vis_identifier, fig)
 
         plt.close(fig)
-
-    # for meta_analysis_key in prog_data.meta_analysis_repo.keys():
-    #     meta_analysis_result = prog_data.meta_analysis_repo[meta_analysis_key]
-    #     if(meta_analysis_result is None):
-    #         continue
-
-    #     vis_options = prog_data.settings["meta_analysis_options"][meta_analysis_key]["vis_options"]
-    #     vis_title = apply_variables(vis_options["title"])
-    #     vis_colors = vis_options["colors"]
-
-    #     if("meta" not in prog_data.vis_repo.keys()):
-    #         prog_data.vis_repo["meta"] = {}
-
-    #     prog_data.vis_repo["meta"][meta_analysis_key] = plot_time_series(meta_analysis_result, vis_title, vis_colors)
-    #     plt.close(prog_data.vis_repo["meta"][meta_analysis_key])
 
     return data_repo

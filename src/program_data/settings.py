@@ -74,7 +74,7 @@ settings = {
         "gpuhourstotal": {
             "filter": filter_analyis_type("gpuhours"),
             "types": ["gpu"],
-            "requires": ["gpuhours"]
+            "requires": ["gpuhours", "gpuhoursavailable"]
         },
         "gpuhoursavailable": {
             "filter": filter_source_type("gpu"),
@@ -128,6 +128,11 @@ settings = {
                     "gpujobstotal": "blue"
                 }
             }
+        },
+        "utilization": {
+            "types": ["cpu", "gpu"],
+            "requires": ["cpuhourstotal", "cpuhoursavailable", "gpuhourstotal", "gpuhoursavailable"],
+            "vis_options": None
         }
     },
     # Information about hardware configurations for each node.

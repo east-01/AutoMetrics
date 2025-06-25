@@ -1,16 +1,14 @@
 import os
 import yaml
 
-def load_config():
-    config_file = "./config.yaml"
-
-    if(not os.path.isfile(config_file)):
+def load_config(config_location = "./config.yaml"):
+    if(not os.path.isfile(config_location)):
         print(f"Error: The config file \"{config}\" doesn't exist. Exiting...")
         exit(1)
 
     try:
         # Load the YAML file
-        with open(config_file, 'r') as file:
+        with open(config_location, 'r') as file:
             config = yaml.safe_load(file)
 
         # Ensure the YAML was parsed correctly

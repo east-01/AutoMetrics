@@ -2,7 +2,12 @@ import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import datetime
 
-def plot_simple_bargraph(df, title, subtext, color):
+from src.data.data_repository import DataRepository
+from src.data.identifiers.identifier import *
+
+def plot_simple_bargraph(data_repo: DataRepository, identifier: AnalysisIdentifier, title, subtext, color):
+    df, meta_data = data_repo.get(identifier)
+
     df = df.set_index(df.columns[0])
     df = df.iloc[::-1]
 
@@ -38,7 +43,7 @@ def plot_simple_bargraph(df, title, subtext, color):
 
     return fig  # Return the figure object
             
-def plot_time_series(df, title, colors={}, default_color="blue"):
+def plot_time_series(data_repo: DataRepository, identifier: AnalysisIdentifier, title, colors={}, default_color="blue"):
     """
     Plots a horizontal line showing the data points at each time.
     Expects a dataframe with the first column being period, each following column will be a new line
@@ -46,6 +51,8 @@ def plot_time_series(df, title, colors={}, default_color="blue"):
     Assign colors to each line by adding in entry to dictionary:
       colors[<column name>] = "<color name>"
     """
+
+    df, meta_data = data_repo.get(identifier)
 
     if(len(df.columns) < 2):
         raise ValueError("Can't plot horizontal series, DataFrame has less than 2 columns!")
@@ -56,7 +63,7 @@ def plot_time_series(df, title, colors={}, default_color="blue"):
     fig, ax = plt.subplots(figsize=(15, 8))
 
     # Set axis limits
-    period_starts = [period[0] for period in df["Period"]]
+    period_starts = [period[0] for period in meta_data["periods"]]
     ax.set_xlim(datetime.datetime.fromtimestamp(min(period_starts)) - datetime.timedelta(days=3),
                 datetime.datetime.fromtimestamp(max(period_starts)) + datetime.timedelta(days=3))
 
@@ -75,9 +82,6 @@ def plot_time_series(df, title, colors={}, default_color="blue"):
     padding = (max_value-min_value)*0.1
     ax.set_ylim(min_value - padding, max_value + padding)
     
-    # Change the period column from a timestamp tuple to a datetime object based off of the starting timestamp
-    df.loc[:, "Period"] = df["Period"].apply(lambda period: datetime.datetime.fromtimestamp(period[0]))
-
     # Plot and annotate each line
     for column in df.columns:
         if(column == "Period"):

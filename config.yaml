@@ -16,3 +16,4 @@ query: |
 top5hours_blacklist:
   - sdsu-rci-jh
   - csu-tide-jupyterhub
+  - csusb-jupyterhub

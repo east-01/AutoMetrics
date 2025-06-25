@@ -18,7 +18,9 @@ def load_std_prog_data():
         print(f"Invalid arguments: {e}")
         exit()
 
-    return ProgramData(args, load_config())
+    cfg = load_config(args.config)
+
+    return ProgramData(args, cfg)
 
 class ProgramData():
     def __init__(self, args, config):
