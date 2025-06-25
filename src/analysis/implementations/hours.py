@@ -2,7 +2,7 @@
 import pandas as pd
 
 from src.data.data_repository import DataRepository
-from src.analysis.grafana_df_cleaning import has_time_column, clear_time_column, extract_column_data
+from src.analysis.grafana_df_cleaning import has_time_column, clear_time_column, _extract_column_data
 from src.data.ingest.grafana_df_analyzer import get_period
 from src.program_data.settings import settings
 from src.data.identifiers.identifier import *
@@ -116,13 +116,16 @@ def _analyze_available_hours_ondf(df, df_type, start_ts, end_ts):
 	# Get list of unique node names
 	unique_nodes = set()
 	for col_name in df.columns:
-		col_data = extract_column_data(col_name)
+		col_data = _extract_column_data(col_name)
 		unique_nodes.add(col_data["node"])
-
 
 	# Loop through each node name adding resource count * hours to the total	
 	node_infos = settings["node_infos"]
 	total_resource_hours = 0
+
+	unout = list(unique_nodes)
+	unout.sort()
+	print("\n".join(unout))
 
 	for node_name in unique_nodes:
 		# Get prefix and ensure it exists in the infos dict

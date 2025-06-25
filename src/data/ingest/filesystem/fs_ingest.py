@@ -29,3 +29,5 @@ class FileSystemIngestController(IngestController):
             identifier = SourceIdentifier(period[0], period[1], resource_type)
 
             data_repo.add(identifier, file_df)
+
+        return data_repo
