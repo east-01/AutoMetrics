@@ -136,19 +136,21 @@ settings = {
         }
     },
     # Information about hardware configurations for each node.
-    # NOTE: CPU core count is -2 the real amount to account for reserved cores.
     "node_infos": {
         "rci-tide-cpu": {
-            "cpu": 62,
-            "gpu": 4
+            "cpu": 64,
+            "gpu": 4,
+            "node_cnt": 6
         },
         "rci-tide-gpu": { # Targets L40 GPUs
-            "cpu": 22,
-            "gpu": 4
+            "cpu": 24,
+            "gpu": 4,
+            "node_cnt": 17
         },
         "rci-nrp-gpu": { # Targets A100 GPUs
-            "cpu": 62,
-            "gpu": 4
+            "cpu": 64,
+            "gpu": 4,
+            "node_cnt": 8
         }
     }
 }

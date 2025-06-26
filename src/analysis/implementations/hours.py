@@ -121,22 +121,35 @@ def _analyze_available_hours_ondf(df, df_type, start_ts, end_ts):
 
 	# Loop through each node name adding resource count * hours to the total	
 	node_infos = settings["node_infos"]
-	total_resource_hours = 0
 
-	unout = list(unique_nodes)
-	unout.sort()
-	print("\n".join(unout))
+	if(df_type=="cpu"):
+		cpu_info = node_infos["rci-tide-cpu"]
+		gpu_info = node_infos["rci-tide-gpu"]
+		avail_cpus = cpu_info["cpu"]-2 + gpu_info["cpu"]-2
 
-	for node_name in unique_nodes:
-		# Get prefix and ensure it exists in the infos dict
-		node_prefix = get_node_prefix(node_name)
-		if(node_prefix not in node_infos):
-			raise Exception(f"Node prefix \"{node_prefix}\" is not in settings.py node_infos.")
+		return cpu_info["node_cnt"] * avail_cpus * total_hours_month
+	elif(df_type=="gpu"):
+		tide_gpu_info = node_infos["rci-tide-gpu"]
+		avail_gpus = tide_gpu_info["gpu"]
+		
+		return tide_gpu_info["node_cnt"] * avail_gpus * total_hours_month
 
-		node_info = node_infos[node_prefix]
-		resources = node_info[df_type]
+	# total_resource_hours = node_infos[]
 
-		total_resource_hours += resources * total_hours_month
+	# unout = list(unique_nodes)
+	# unout.sort()
+	# print("\n".join(unout))
 
-	return total_resource_hours
+	# for node_name in unique_nodes:
+	# 	# Get prefix and ensure it exists in the infos dict
+	# 	node_prefix = get_node_prefix(node_name)
+	# 	if(node_prefix not in node_infos):
+	# 		raise Exception(f"Node prefix \"{node_prefix}\" is not in settings.py node_infos.")
+
+	# 	node_info = node_infos[node_prefix]
+	# 	resources = node_info[df_type]
+
+	# 	total_resource_hours += resources * total_hours_month
+
+	# return total_resource_hours
 
