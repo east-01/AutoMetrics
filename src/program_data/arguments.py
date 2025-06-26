@@ -66,25 +66,7 @@ def is_integer(value):
         return True
     if isinstance(value, str):
         return value.isdigit() or (value.startswith('-') and value[1:].isdigit())
-    return False
-
-def parse_unix_ts_range(time_range_str):
-    """
-    Parse a time range with the format <start>-<end> with both the start and end times being
-    UNIX Timestamps.
-    """
-    # Ensure delimiter exists
-    if('-' not in time_range_str):
-        print(f"Failed to parse time range string \"{time_range_str}\" it doesn't have the \"-\" required for splitting into start and end time.")
-        raise ValueError()
-    
-    # Split the argument and ensure beginning and end are integers
-    time_range_arr = time_range_str.split('-')
-    if(not is_integer(time_range_arr[0]) or not is_integer(time_range_arr[1])):
-        print(f"Failed to parse time range string \"{time_range_str}\" either the start or end time failed to parse as Integer.")
-        raise ValueError()
-    
-    return (int(time_range_arr[0]), int(time_range_arr[1]))
+    return False   
 
 def parse_month_year(time_str):
     try:
@@ -105,19 +87,28 @@ def parse_time_range(time_range_str):
     except:
         pass
 
-    # Try to parse the time range string as either a single month or a range of months (i.e. January24 or January24-March24)
-    if("-" in time_range_str):
-        time_str_arr = time_range_str.split("-")
-        if(len(time_str_arr) == 2):
-            start = parse_month_year(time_str_arr[0])
-            end = parse_month_year(time_str_arr[1])
-            return (start[0], end[1])
-    else:
-        single_month_year = parse_month_year(time_range_str)
-        if(single_month_year):
-            return single_month_year
+    # Try to parse the time range string as a single month year combination (i.e. May25)
+    single_month_year = parse_month_year(time_range_str)
+    if(single_month_year):
+        return single_month_year
 
-    return parse_unix_ts_range(time_range_str)
+    if("-" not in time_range_str):
+        raise ArgumentException("Can't parse time range- failed to parse year & single month year formats. The following formats require a range but no '-' character present.")
+
+    time_str_arr = time_range_str.split("-")
+    if(len(time_str_arr) != 2):
+        raise ArgumentException(f"Can't parse time range- found `-` character, but found !=2 arguments: {time_str_arr}")
+
+    start = parse_month_year(time_str_arr[0])
+    end = parse_month_year(time_str_arr[1])
+    if(start and end):
+        return (start[0], end[1])        
+
+    if(not is_integer(time_str_arr[0]) or not is_integer(time_str_arr[1])):
+        print(f"Failed to parse time range string \"{time_range_str}\" either the start or end time failed to parse as Integer.")
+        raise ValueError()
+    
+    return (int(time_str_arr[0]), int(time_str_arr[1]))
 
 def parse_analysis_options(analysis_options_str):
     if(analysis_options_str == "all"):
