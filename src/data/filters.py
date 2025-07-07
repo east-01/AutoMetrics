@@ -43,8 +43,8 @@ def filter_timestamps(start_ts: int, end_ts: int):
     Returns:
         Callable[[Identifier], bool]: The lambda operation.
     """
-    analysis_type_lambda = filter_type(TimeStampIdentifier)
-    return lambda identifier: analysis_type_lambda(identifier) and identifier.start_ts == start_ts and identifier.end_ts == end_ts
+    time_stamp_lambda = filter_type(TimeStampIdentifier)
+    return lambda identifier: time_stamp_lambda(identifier) and identifier.start_ts == start_ts and identifier.end_ts == end_ts
 
 def filter_analyis_type(analysis_type: str):
     """

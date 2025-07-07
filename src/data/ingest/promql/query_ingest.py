@@ -10,7 +10,7 @@ from src.data.ingest.grafana_df_analyzer import *
 from src.data.processors import process_periods
 from src.data.ingest.promql.query_executor import perform_query, transform_query_response
 from src.data.ingest.promql.query_designer import build_query_list
-from src.utils.timeutils import to_unix_ts, from_unix_ts
+from src.utils.timeutils import to_unix_ts, from_unix_ts, get_range_printable
 from src.data.filters import *
 
 class PromQLIngestController(IngestController):
@@ -81,14 +81,9 @@ def _filter_to_running_pending(prog_data: ProgramData, data_repo: DataRepository
     status_lambda = lambda id: source_query_type_lambda(id) and id.query_name == "status"
     truth_lambda = lambda id: source_query_type_lambda(id) and id.query_name == "truth"
 
-    last_timestamp = time.time()
-
     for status_identifier in data_repo.filter_ids(status_lambda):
         status_df_raw = data_repo.get_data(status_identifier)
-        print("preprocessing status")
-        last_timestamp = time.time()
         status_df = _preprocess_df(status_df_raw, False, step)
-        print(f"done in {time.time() - last_timestamp}")
 
         # Tracks the set of created types, used to protect from creating multiple SourceIdentifiers
         #   with the same start_ts, end_ts, and type        
@@ -96,7 +91,8 @@ def _filter_to_running_pending(prog_data: ProgramData, data_repo: DataRepository
 
         # Filter identifiers with type SourceQueryIdentifier, query_name=truth, and matching 
         #   timestamps 
-        identifiers_filter = lambda identifier: truth_lambda(identifier) and filter_timestamps(status_identifier.start_ts, status_identifier.end_ts)
+        timestamps_filter = filter_timestamps(status_identifier.start_ts, status_identifier.end_ts)
+        identifiers_filter = lambda identifier: truth_lambda(identifier) and timestamps_filter(identifier)
         identifiers = data_repo.filter_ids(identifiers_filter)
 
         for values_identifier in identifiers:
@@ -105,10 +101,8 @@ def _filter_to_running_pending(prog_data: ProgramData, data_repo: DataRepository
                 continue
         
             values_df_raw = data_repo.get_data(values_identifier)
-            print(f"\npreprocessing values for {values_identifier}")
-            last_timestamp = time.time()
+
             values_df = _preprocess_df(values_df_raw, True, step)
-            print(f"done in {time.time() - last_timestamp}")
             values_df = _apply_status_df(status_df, values_df)
 
             identifier = SourceIdentifier(values_identifier.start_ts, values_identifier.end_ts, values_identifier.type)
@@ -173,11 +167,6 @@ def _merge_columns_on_uid(df: pd.DataFrame, preserve_columns: bool = False):
     uids = [select_uid(col) for col in df.columns]
     df.columns = uids
 
-    time_start = time.time()
-    order = np.argsort(uids)
-    df = df.iloc[:, order]
-    print(f"sort took {(time.time() - time_start):.1f}s")
-
     seen_uids = set() # The set of uids that have been visited in the loop
     duplicate_uids = set() # The set of uids that have more than one column
     for uid in uids:
@@ -186,14 +175,15 @@ def _merge_columns_on_uid(df: pd.DataFrame, preserve_columns: bool = False):
         
         seen_uids.add(uid)
         
-    to_merge_df = df[list(duplicate_uids)]
     static_df = df[list(seen_uids-duplicate_uids)]
 
-    time_start = time.time()
+    to_merge_df = df[list(duplicate_uids)]
     to_merge_df = to_merge_df.T.groupby(to_merge_df.columns).max().T # Merge columns with the same UID
-    print(f"groupby took {(time.time() - time_start):.1f}s")
 
     df = pd.concat([static_df, to_merge_df], axis=1)
+
+    order = np.argsort(df.columns)
+    df = df.iloc[:, order]
 
     if(preserve_columns):
         df.columns = [orig_names[uid] for uid in df.columns]
@@ -249,18 +239,9 @@ def _infer_times(df: pd.DataFrame, step):
     return df
 
 def _preprocess_df(df: pd.DataFrame, preserve_columns, step):
-    last_timestamp = time.time()
-    print("Filtering 0 cols")
     df = _filter_cols_zero(df)
-    print(f"done in {(time.time() - last_timestamp):.1f}")
-    last_timestamp = time.time()
-    print("Merging columns on uid")
     df = _merge_columns_on_uid(df, preserve_columns)
-    print(f"done in {(time.time() - last_timestamp):.1f}")
-    last_timestamp = time.time()
-    print("Inferring times")
     df = _infer_times(df, step)
-    print(f"done in {(time.time() - last_timestamp):.1f}")
     return df
 
 def _apply_status_df(status_df, values_df):

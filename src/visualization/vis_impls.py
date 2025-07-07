@@ -82,6 +82,9 @@ def plot_time_series(data_repo: DataRepository, identifier: AnalysisIdentifier, 
     padding = (max_value-min_value)*0.1
     ax.set_ylim(min_value - padding, max_value + padding)
     
+    # Change the period column from a timestamp tuple to a datetime object based off of the starting timestamp
+    df.loc[:, "Period"] = [datetime.datetime.fromtimestamp(period[0]) for period in meta_data["periods"]]
+
     # Plot and annotate each line
     for column in df.columns:
         if(column == "Period"):

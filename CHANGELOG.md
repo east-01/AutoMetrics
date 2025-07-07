@@ -5,13 +5,22 @@ All notable changes to **AutoTM (Tide Metrics Automation)** will be documented i
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),  
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.0.4] - XXXX-XX-XX
+## [1.1.5] - Unreleased
 ### TODO
-- Upgrade argument parsing: subparsers and add_mutually_exclusive_group
 - Add tests for DataRepository#Join
 - Add tests for Processors#check_overlaps
 - Add tests for new filters
+
+## [1.1.4] - 2025-07-07
+### Added
+- New ingest system. Allows for multiple ingest sources of all kinds of data.
+
+### Changed
+- Upgrade argument parsing: subparsers and add_mutually_exclusive_group
+
+### Fixed
 - Bug with unix timestamp range
+- Bug with vis gen
 
 ## [1.0.3] - 2025-06-25
 ### Added

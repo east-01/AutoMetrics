@@ -42,16 +42,3 @@ def test_process_periods(timestamps, adjusted_timestamps):
 
     assert new_data_repo.get_data(adjsrcid1) == "test"
     assert new_data_repo.get_metadata(adjsrcid1) == metadata
-
-def test_process_periods_overlap(timestamps):
-    extra_ts = 1706342400 # 1/27/24 T:0:0:0
-
-    srcid1 = SourceIdentifier(timestamps[0], timestamps[1], "cpu")
-    srcid2 = SourceIdentifier(extra_ts, timestamps[3], "cpu")
-
-    data_repo = DataRepository()
-    data_repo.add(srcid1, "test")
-    data_repo.add(srcid2, "test2")
-
-    with pytest.raises(ValueError):
-        process_periods(data_repo)

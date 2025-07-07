@@ -16,7 +16,7 @@ The installation instructions assume that you have:
 
 AutoTM is run from the command line, the base version of it can be run with:
 ```
-python tidemetrics.py <analyses>
+python src/main.py <analyses>
 ```
 Where \<analyses\> is a list of analysis options you want to perform, separated by a comma. See the [command line arguments](#command-line-arguments) section to fully use AutoTM.
 
