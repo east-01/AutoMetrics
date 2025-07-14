@@ -82,13 +82,17 @@ counted_schools = set() # A set of all school names used in the total
 for order_key in order.keys():
     counted_schools.add(order_key)
 
-    total = buckets[order_key]
+    if(order_key in buckets):
+        total = buckets[order_key]
+    else:
+        total = 0
 
     aliases = order[order_key]
     for alias in aliases:
         counted_schools.add(alias)
 
-        total += buckets[alias]
+        if(alias in buckets):
+            total += buckets[alias]
     
     output[order_key] = total
 
