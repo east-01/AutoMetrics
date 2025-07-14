@@ -8,6 +8,8 @@ temp
 *.DS_Store
 .vscode/
 configs*
+src/extra_scripts/student_counts.xlsx
+src/extra_scripts/student_counts_in.txt
 
 # Standard python gitignore:
 # Byte-compiled / optimized / DLL files
