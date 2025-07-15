@@ -7,7 +7,6 @@ temp
 *notes.txt
 *.DS_Store
 .vscode/
-configs*
 src/extra_scripts/student_counts.xlsx
 src/extra_scripts/student_counts_in.txt
 

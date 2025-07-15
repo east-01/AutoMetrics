@@ -1,5 +1,4 @@
 import pandas as pd
-import xlsxwriter
 
 ##### SETTINGS ####
 in_filepath = "./src/extra_scripts/student_counts_in.txt"
@@ -25,6 +24,7 @@ order = {
     "csudh": [],
     "calpoly": [],
     "calstate": [],
+    "sonoma": []
 }
 
 ###################
