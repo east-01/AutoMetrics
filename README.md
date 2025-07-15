@@ -86,7 +86,7 @@ These arguments can be used with either a PromQL query or custom file/directory 
 Argument | Description | Example usage
 ---------|-------------|--------------
 -o or --outdir | The directory that the result files will be placed in. | -o "./output"
--c or --config | The .yaml config file that you want to use. | -c "./config.yaml"
+-c or --config | The .yaml config file that you want to use. | -c "./config/csu.yaml"
 -v | Verbose messaging in the console. | -v
 
 ### Configuration
