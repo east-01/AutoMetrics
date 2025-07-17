@@ -35,7 +35,7 @@ settings = {
         },
         "cpuhoursavailable": {
             "filter": filter_source_type("cpu"),
-            "types": ["cpu"],
+            "types": [],
             "requires": []
         },
         "cpujobs": {
@@ -78,7 +78,7 @@ settings = {
         },
         "gpuhoursavailable": {
             "filter": filter_source_type("gpu"),
-            "types": ["gpu"],
+            "types": [],
             "requires": []
         },
         "gpujobs": {

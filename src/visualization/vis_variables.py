@@ -1,10 +1,11 @@
 import calendar
+import datetime
 
 from src.program_data.program_data import ProgramData
 from src.data.data_repository import DataRepository
 from src.data.identifiers.identifier import *
 from src.data.filters import *
-from src.utils.timeutils import get_range_as_month
+from src.utils.timeutils import get_range_printable
 
 class VisualizationVariables():
     """
@@ -41,10 +42,10 @@ class VisualizationVariables():
                 self.parsed_variables[variable_name] = variable_value
 
         src_id: SourceIdentifier = identifier.find_source()
-        range_data = get_range_as_month(src_id.start_ts, src_id.end_ts, prog_data.config['step'])
+        start_dt = datetime.datetime.fromtimestamp(src_id.start_ts)
 
-        self.parsed_variables["MONTH"] = calendar.month_name[range_data["month"]]
-        self.parsed_variables["YEAR"] = range_data["year"]
+        self.parsed_variables["MONTH"] = calendar.month_name[start_dt.month]
+        self.parsed_variables["YEAR"] = start_dt.year
 
     def apply_variables(self, text):
         for variable_name in self.parsed_variables:

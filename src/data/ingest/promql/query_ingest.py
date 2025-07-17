@@ -1,6 +1,7 @@
 import re
 import math
 import time
+import numpy as np
 
 from src.program_data.program_data import ProgramData
 from src.data.data_repository import DataRepository
@@ -12,6 +13,7 @@ from src.data.ingest.promql.query_executor import perform_query, transform_query
 from src.data.ingest.promql.query_designer import build_query_list
 from src.utils.timeutils import to_unix_ts, from_unix_ts, get_range_printable
 from src.data.filters import *
+from src.data.ingest.promql.query_preprocess import _preprocess_df
 
 class PromQLIngestController(IngestController):
     def ingest(self) -> DataRepository:
@@ -37,7 +39,7 @@ class PromQLIngestController(IngestController):
             grafana_df = convert_to_numeric(grafana_df)
 
             # Read identifying data about DataFrame
-            period = get_period(grafana_df)
+            period = (query_block.start_ts, query_block.end_ts)
             resource_type = None
             if(query_block.query_name == "truth"):
                 resource_type = get_resource_type(grafana_df)
@@ -47,15 +49,16 @@ class PromQLIngestController(IngestController):
             data_repo.add(identifier, grafana_df)
 
         # Normalize periods for filtering step, then perform filtering
-        data_repo = process_periods(data_repo)
+        # data_repo = process_periods(data_repo)
 
         print("Applying running/pending filter...")
 
         start_time = time.time()
         data_repo = _filter_to_running_pending(self.prog_data, data_repo)
-        end_time = time.time()
 
-        print(f"Filtering took {(end_time-start_time)} seconds.")
+        print(f"Filtering took {(time.time()-start_time):.2f} seconds.")
+
+        data_repo = stitch(data_repo)
 
         return data_repo
 
@@ -111,138 +114,6 @@ def _filter_to_running_pending(prog_data: ProgramData, data_repo: DataRepository
             created_types.add(identifier.type)   
 
     return out_repository
-
-def _filter_cols_zero(df: pd.DataFrame):
-    """
-    Removes columns with a sum of 0, makes processing more efficient later.
-
-    Args:
-        df (pd.DataFrame): The DataFrame to remove columns.
-    
-    Returns:
-        pd.DataFrame: The adjusted DataFrame with removed empty columns.
-    """
-    
-    df.drop(columns=df.columns[df.sum() == 0], inplace=True)
-    return df    
-
-import time
-import numpy as np
-
-def _merge_columns_on_uid(df: pd.DataFrame, preserve_columns: bool = False):
-    """
-    Takes the max value from each uid in the DataFrame and places it in a single row, this
-        squashes the DataFrame horizontally for more efficient processing later.
-    
-    Args:
-        df (pd.DataFrame): The DataFrame to merge horizontally.
-        preserve_columns (bool): Keep the column names as they were or replace with only UIDs.
-    
-    Returns:
-        pd.DataFrame: The adjusted DataFrame with squashed columns.
-    """
-    # Holds string uid key with original column name values
-    orig_names = {}
-
-    def select_uid(string):
-        if(string == "Time"):
-            return string
-
-        match = re.search(r'uid="([^"]+)"', string)
-        if match:
-            uid = match.group(1)
-
-            # Store first instance of the uid's original name, pandas will append .X to duplicate 
-            #   column names
-            if(preserve_columns and uid not in orig_names):
-                orig_names[uid] = string
-
-            return uid
-        else:
-            raise Exception(f"Failed to read uid in column name \"{string}\"")
-
-    time_col = df['Time'] # Separate Time column
-    df = df.drop(columns='Time')
-
-    uids = [select_uid(col) for col in df.columns]
-    df.columns = uids
-
-    seen_uids = set() # The set of uids that have been visited in the loop
-    duplicate_uids = set() # The set of uids that have more than one column
-    for uid in uids:
-        if(uid in seen_uids):
-            duplicate_uids.add(uid)
-        
-        seen_uids.add(uid)
-        
-    static_df = df[list(seen_uids-duplicate_uids)]
-
-    to_merge_df = df[list(duplicate_uids)]
-    to_merge_df = to_merge_df.T.groupby(to_merge_df.columns).max().T # Merge columns with the same UID
-
-    df = pd.concat([static_df, to_merge_df], axis=1)
-
-    order = np.argsort(df.columns)
-    df = df.iloc[:, order]
-
-    if(preserve_columns):
-        df.columns = [orig_names[uid] for uid in df.columns]
-
-    df.insert(0, 'Time', time_col) # Reattach Time column
-
-    return df
-
-def _infer_times(df: pd.DataFrame, step):
-    """
-    Infer timestamps in between rows of a Grafana DataFrame based off of a step value.
-    If the difference in timestamps between two rows is greater than the step value, new timestamps
-        will be generated with the correct step values to fill the gap.
-
-    Args:
-        df (pd.DataFrame): The DataFrame that times will need to be inferred for.
-        step (int): The time in seconds between expected steps.
-
-    Returns:
-        pd.DataFrame: The adjusted DataFrame with inferred time rows.    
-    """
-
-    columns_excluding_time = list(df.columns)
-    columns_excluding_time.remove("Time")
-
-    i = 0
-    while i < len(df["Time"]) - 1:
-        
-        time = to_unix_ts(df["Time"][i])
-        next_time = to_unix_ts(df["Time"][i+1])
-        time_offset = next_time-time
-
-        if(time_offset <= step):
-            i += 1
-            continue
-
-        rows_to_add = math.floor(time_offset/step)
-
-        times_arr = [from_unix_ts(time + j*step) for j in range(1, rows_to_add)]
-        times_dict = { "Time": times_arr } 
-
-        rows_arr = [float('NaN')]*len(times_arr)
-        rows_dict = { key: rows_arr for key in columns_excluding_time }
-
-        final_df = times_dict | rows_dict
-
-        rows_df = pd.DataFrame(final_df)        
-                
-        df = pd.concat([df.iloc[:i+1], rows_df, df.iloc[i+1:]]).reset_index(drop=True)
-
-        i += rows_to_add
-
-    return df
-
-def _preprocess_df(df: pd.DataFrame, preserve_columns, step):
-    df = _filter_cols_zero(df)
-    df = _merge_columns_on_uid(df, preserve_columns)
-    df = _infer_times(df, step)
-    return df
 
 def _apply_status_df(status_df, values_df):
     """
@@ -306,4 +177,35 @@ def _apply_status_df(status_df, values_df):
 
     return values_df
 
+def stitch(data_repo: DataRepository):
+    """
+    Filter a DataRepository containing multiple SourceQueryIdentifiers to SourceIdentifiers
+        based off of their running/pending status.
 
+    Args:
+        data_repo (DataRepository): The input repository, contains SourceQueryIdentifiers to
+            be transformed.
+    
+    Returns:
+        DataRepository: The output DataRepository, contains SourceIdentifiers.
+    """
+
+    out_data_repo = DataRepository()
+
+    for type in settings["type_strings"]:
+        identifiers = data_repo.filter_ids(filter_source_type(type))
+        identifiers.sort(key=lambda id: id.start_ts)
+
+        # The data frame that we're building for the current period; right now the data frames
+        #   are built by month. But we should use Timeline later
+        df = pd.DataFrame()
+
+        for identifier in identifiers:
+            df_toadd = data_repo.get_data(identifier)
+
+            df = pd.concat([df, df_toadd], ignore_index=True, sort=False)
+
+        new_identifier = SourceIdentifier(identifiers[0].start_ts, identifiers[-1].end_ts, identifiers[0].type)
+        out_data_repo.add(new_identifier, df)
+
+    return out_data_repo

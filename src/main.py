@@ -26,7 +26,7 @@ print("")
 # Load DataFrames
 print("Starting ingest...")
 prog_data.data_repo = ingest(prog_data)
-prog_data.data_repo = process_periods(prog_data.data_repo)
+# prog_data.data_repo = process_periods(prog_data.data_repo)
 prog_data.data_repo = generate_metadata(prog_data.data_repo, prog_data.config)
 
 if(has_overlaps(prog_data.data_repo)):

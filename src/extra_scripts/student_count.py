@@ -109,5 +109,6 @@ except PermissionError:
 missed = set(buckets.keys())-counted_schools
 if(len(missed) > 0):
     print("Missed schools in total:", ", ".join(missed))
+    print("These must be added to the order variable at the top of this script as either a new key or an alias for another school.")
 else:
     print("All schools are accounted for in total.")
