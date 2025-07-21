@@ -1,6 +1,7 @@
 import re
 import math
 import time
+import datetime
 import numpy as np
 
 from src.program_data.program_data import ProgramData
@@ -35,6 +36,9 @@ class PromQLIngestController(IngestController):
             json_response = perform_query(query_block.query_url)
             grafana_df = transform_query_response(json_response)
 
+            if(len(grafana_df) == 0):
+                print("WARN: Empty data frame")
+
             # Convert values to numeric
             grafana_df = convert_to_numeric(grafana_df)
 
@@ -58,7 +62,12 @@ class PromQLIngestController(IngestController):
 
         print(f"Filtering took {(time.time()-start_time):.2f} seconds.")
 
+        print("Stitching...")
+
+        start_time = time.time()
         data_repo = stitch(data_repo)
+
+        print(f"Stitching took {(time.time()-start_time):.2f} seconds.")
 
         return data_repo
 
@@ -196,16 +205,43 @@ def stitch(data_repo: DataRepository):
         identifiers = data_repo.filter_ids(filter_source_type(type))
         identifiers.sort(key=lambda id: id.start_ts)
 
+        if(len(identifiers) == 0):
+            continue
+
         # The data frame that we're building for the current period; right now the data frames
         #   are built by month. But we should use Timeline later
         df = pd.DataFrame()
+        df_ids = [] # Stores a list of identifiers for this specific dataframe
+        last_dt = datetime.datetime.fromtimestamp(identifiers[0].start_ts)
+
+        # Store the current data frame
+        def store_df():
+            nonlocal df, df_ids
+
+            new_identifier = SourceIdentifier(df_ids[0].start_ts, df_ids[-1].end_ts, df_ids[0].type)
+            out_data_repo.add(new_identifier, df)
+
+        def reset_df():
+            nonlocal df, df_ids
+
+            df = pd.DataFrame()
+            df_ids = []
 
         for identifier in identifiers:
+
+            # If the current month and year do not match the existing dataframe's month and year,
+            #   switch to a new df
+            curr_dt = datetime.datetime.fromtimestamp(identifier.start_ts)
+            if((curr_dt.month, curr_dt.year) != (last_dt.month, last_dt.year)):
+                store_df()
+                reset_df()
+
+            last_dt = curr_dt
+
             df_toadd = data_repo.get_data(identifier)
-
             df = pd.concat([df, df_toadd], ignore_index=True, sort=False)
+            df_ids.append(identifier)
 
-        new_identifier = SourceIdentifier(identifiers[0].start_ts, identifiers[-1].end_ts, identifiers[0].type)
-        out_data_repo.add(new_identifier, df)
+        store_df()
 
     return out_data_repo

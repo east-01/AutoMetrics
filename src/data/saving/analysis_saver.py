@@ -60,10 +60,10 @@ class AnalysisSaver(Saver):
         src_id = identifier.find_source()
         src_metadata = data_repo.get_metadata(src_id)
 
-        readable_period = src_metadata["readable_period"]
+        out_file_name = src_metadata["out_file_name"]
 
         # Make sure the directory holding these results is there
-        analysis_dir_path = os.path.join(self.out_path, f"{readable_period} analysis")
+        analysis_dir_path = os.path.join(self.out_path, f"{out_file_name} analysis")
         if(not os.path.exists(analysis_dir_path)):
             os.mkdir(analysis_dir_path)
 

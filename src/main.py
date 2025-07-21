@@ -60,7 +60,10 @@ if(out_dir is not None):
         os.mkdir(out_dir)
 
     for saver in [DataFrameSaver(prog_data), AnalysisSaver(prog_data), SummarySaver(prog_data), VizualizationsSaver(prog_data)]:
-        saver.save()
+        try:
+            saver.save()
+        except Exception as e:
+            print(f"Saving failed for saver \"{type(saver)}\": {e}")
     print("")
 
 # Print summaries

@@ -123,16 +123,23 @@ def _analyze_available_hours_ondf(df, df_type, start_ts, end_ts):
 	node_infos = settings["node_infos"]
 
 	if(df_type=="cpu"):
-		cpu_info = node_infos["rci-tide-cpu"]
-		gpu_info = node_infos["rci-tide-gpu"]
-		avail_cpus = cpu_info["cpu"]-2 + gpu_info["cpu"]-2
 
-		return cpu_info["node_cnt"] * avail_cpus * total_hours_month
-	elif(df_type=="gpu"):
+		cpu_info = node_infos["rci-tide-cpu"]
+		cpu_cpus_avail = cpu_info["node_cnt"] * (cpu_info["cpu"]-2)
+
 		tide_gpu_info = node_infos["rci-tide-gpu"]
-		avail_gpus = tide_gpu_info["gpu"]
+		gpu_cpus_avail = tide_gpu_info["node_cnt"] * (tide_gpu_info["cpu"]-2)
+
+		cpus_avail = cpu_cpus_avail + gpu_cpus_avail
+
+		return cpus_avail * total_hours_month
+
+	elif(df_type=="gpu"):
+
+		tide_gpu_info = node_infos["rci-tide-gpu"]
+		gpus_avail = tide_gpu_info["node_cnt"] * tide_gpu_info["gpu"]
 		
-		return tide_gpu_info["node_cnt"] * avail_gpus * total_hours_month
+		return gpus_avail * total_hours_month
 
 	# total_resource_hours = node_infos[]
 

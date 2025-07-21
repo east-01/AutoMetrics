@@ -31,7 +31,7 @@ class VizualizationsSaver(Saver):
                 src_id = analysis_id.find_source()
 
                 metadata = data_repo.get_metadata(src_id)
-                name_prefix = f"{src_id.type}-{metadata['readable_period']}"
+                name_prefix = f"{src_id.type}-{metadata['out_file_name']}"
             else:
                 name_prefix = "Entire period"
 
