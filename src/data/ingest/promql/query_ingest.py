@@ -95,6 +95,12 @@ def _filter_to_running_pending(prog_data: ProgramData, data_repo: DataRepository
 
     for status_identifier in data_repo.filter_ids(status_lambda):
         status_df_raw = data_repo.get_data(status_identifier)
+
+        if(len(status_df_raw) == 0):
+            readable_period = get_range_printable(status_identifier.start_ts, status_identifier.end_ts, 3600)
+            print(f"Skipping applying status filter to {readable_period} the status DataFrame is empty")
+            continue
+
         status_df = _preprocess_df(status_df_raw, False, step)
 
         # Tracks the set of created types, used to protect from creating multiple SourceIdentifiers

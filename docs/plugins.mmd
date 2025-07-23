@@ -1,0 +1,27 @@
+---
+config:
+      theme: dark
+---
+flowchart LR    
+
+    A["Start"]-->B["Timeline generated"]-->C["Ingests"]-->D["Analyses"]-->E["Visualizations"]
+
+    subgraph PL
+        direction LR
+
+        PI["Plugin ingests"]
+        PA["Plugin analyses"]
+    end
+
+    subgraph PLA
+        direction LR
+        
+        API["Plugin ingests"]
+        APA["Plugin analyses"]
+    end
+
+    PI-->C
+    PA-->D
+        
+    API-->C
+    APA-->D

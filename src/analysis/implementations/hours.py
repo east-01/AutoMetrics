@@ -113,12 +113,6 @@ def _analyze_available_hours_ondf(df, df_type, start_ts, end_ts):
 	# Calculate hour amount
 	total_hours_month = (end_ts-start_ts+1)/3600
 
-	# Get list of unique node names
-	unique_nodes = set()
-	for col_name in df.columns:
-		col_data = _extract_column_data(col_name)
-		unique_nodes.add(col_data["node"])
-
 	# Loop through each node name adding resource count * hours to the total	
 	node_infos = settings["node_infos"]
 
