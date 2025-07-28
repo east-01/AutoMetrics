@@ -1,6 +1,6 @@
 import pandas as pd
 
-from src.data.identifiers.identifier import Identifier, SummaryIdentifier
+from src.data.identifier import Identifier
 from src.data.filters import *
 
 class DataRepository():

@@ -27,43 +27,10 @@ class TimeStampIdentifier(Identifier):
         return hash((self.start_ts, self.end_ts, self.type))
 
     def __eq__(self, other) -> bool:
-        return isinstance(other, SourceIdentifier) and self.start_ts == other.start_ts and self.end_ts == other.end_ts and self.type == other.type
+        return isinstance(other, TimeStampIdentifier) and self.start_ts == other.start_ts and self.end_ts == other.end_ts
 
     def __str__(self) -> str:
         return f"timestamps {self.start_ts}-{self.end_ts}"
-
-@dataclass(frozen=True)
-class SourceIdentifier(TimeStampIdentifier):
-    """
-    Identifier for a source Grafana DataFrame.
-    """
-    type: str # cpu/gpu
-
-    def __hash__(self) -> int:
-        return hash((super().__hash__(), self.type))
-
-    def __eq__(self, other) -> bool:
-        return isinstance(other, SourceIdentifier) and super().__eq__(other) and self.type == other.type
-
-    def __str__(self) -> str:
-        return f"sourcedata {self.type}:{self.start_ts}-{self.end_ts}"
-    
-@dataclass(frozen=True)
-class SourceQueryIdentifier(SourceIdentifier):
-    """
-    Identifier for a source Grafana DataFrame. With additional information about the query that
-      generated it. Used in PromQL ingest process.
-    """
-    query_name: str # status/truth (-> values)
-
-    def __hash__(self) -> int:
-        return hash((super().__hash__(), self.query_name))
-
-    def __eq__(self, other) -> bool:
-        return isinstance(other, SourceQueryIdentifier) and super().__eq__(other) and self.query_name == other.query_name
-
-    def __str__(self) -> str:
-        return f"sourcequerydata {self.type} from query {self.query_name}:{self.start_ts}-{self.end_ts}"
 
 @dataclass(frozen=True)
 class AnalysisIdentifier(Identifier):
@@ -84,19 +51,18 @@ class AnalysisIdentifier(Identifier):
     def __str__(self) -> str:
         return f"{self.analysis}({self.on})"
     
-    def find_source(self) -> SourceIdentifier:
+    def find_base(self) -> Identifier:
         """
-        Find the source identifier for this analysis. This is necessary as there can be multiple
-          nested AnalysisIdentifiers.
+        Find the base identifier for this analysis (follow the AnalysisIdentifier.on tree until 
+          root is found). This is necessary as there can be multiple nested AnalysisIdentifiers.
 
         Returns:
-            SourceIdentifier: The base source identifier that this analysis is based off of.
+            Identifier: The base identifier that this analysis is based off of.
         """
         on = self.on
         while(on is not None):
-            if(isinstance(on, SourceIdentifier)):
-                return on
             on = on.on
+
         return None
 
     def is_meta_analysis(self):
@@ -106,7 +72,7 @@ class AnalysisIdentifier(Identifier):
         Returns:
           bool: if this analysis identifier has a root SourceIdentifier
         """
-        return self.find_source() is None
+        return self.find_base() is None
 
 @dataclass(frozen=True)
 class VisIdentifier(Identifier):

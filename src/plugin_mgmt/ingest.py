@@ -7,7 +7,7 @@ from src.program_data.program_data import ProgramData
 from src.data.data_repository import DataRepository
 
 from src.data.ingest.promql.query_ingest import PromQLIngestController
-from src.data.ingest.filesystem.fs_ingest import FileSystemIngestController
+from plugins.filesystem_ingest.fs_ingest import FileSystemIngestController
 
 def ingest(prog_data: ProgramData):
     """

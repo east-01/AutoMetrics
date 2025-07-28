@@ -1,7 +1,7 @@
 import pytest
 import pandas as pd
 
-from src.data.ingest.grafana_df_analyzer import get_period, get_resource_type, _extract_column_data
+from plugins.grafana.grafana_df_analyzer import get_period, get_resource_type, _extract_column_data
 
 def test_extract_column_data_meaningless():
     data = _extract_column_data("{label1=\"value1\", label2=\"value2\"}")

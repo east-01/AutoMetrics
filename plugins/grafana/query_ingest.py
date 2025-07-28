@@ -4,23 +4,22 @@ import time
 import datetime
 import numpy as np
 
+from plugins.grafana.query_designer import *
+from plugins.grafana.query_executor import *
+from plugins.grafana.grafana_df_analyzer import *
+from plugins.grafana.query_preprocess import _preprocess_df
+from plugins.rci.rci_filters import filter_source_type
+from plugins.rci.rci_identifiers import GrafanaIdentifier
+from src.plugin_mgmt.plugins import IngestPlugin
 from src.program_data.program_data import ProgramData
 from src.data.data_repository import DataRepository
-from src.data.identifiers.identifier import SourceQueryIdentifier
-from data.ingest.ingest_controller import *
-from src.data.ingest.grafana_df_analyzer import *
-from src.data.processors import process_periods
-from src.data.ingest.promql.query_executor import perform_query, transform_query_response
-from src.data.ingest.promql.query_designer import build_query_list
 from src.utils.timeutils import to_unix_ts, from_unix_ts, get_range_printable
 from src.data.filters import *
-from src.data.ingest.promql.query_preprocess import _preprocess_df
 
-class PromQLIngestController(IngestController):
-    def ingest(self) -> DataRepository:
+class PromQLIngestController(IngestPlugin):
+    def ingest(self, prog_data: ProgramData) -> DataRepository:
         
-        prog_data: ProgramData = self.prog_data
-        # The data repository that holds SourceQueryIdentifiers, this is different from the
+        # The data repository that holds GrafanaIdentifiers, this is different from the
         #   standard DataRepository because there are multiple queries per period and type, to be
         #   used in the processing step where we only get pending/running pods.
         data_repo: DataRepository = DataRepository()
@@ -48,7 +47,7 @@ class PromQLIngestController(IngestController):
             if(query_block.query_name == "truth"):
                 resource_type = get_resource_type(grafana_df)
 
-            identifier = SourceQueryIdentifier(period[0], period[1], resource_type, query_block.query_name)
+            identifier = GrafanaIdentifier(period[0], period[1], resource_type, query_block.query_name)
             
             data_repo.add(identifier, grafana_df)
 
@@ -73,11 +72,11 @@ class PromQLIngestController(IngestController):
 
 def _filter_to_running_pending(prog_data: ProgramData, data_repo: DataRepository) -> DataRepository:
     """
-    Filter a DataRepository containing multiple SourceQueryIdentifiers to SourceIdentifiers
+    Filter a DataRepository containing multiple GrafanaIdentifiers to SourceIdentifiers
         based off of their running/pending status.
 
     Args:
-        data_repo (DataRepository): The input repository, contains SourceQueryIdentifiers to
+        data_repo (DataRepository): The input repository, contains GrafanaIdentifiers to
             be transformed.
     
     Returns:
@@ -89,7 +88,7 @@ def _filter_to_running_pending(prog_data: ProgramData, data_repo: DataRepository
     step = prog_data.config["step"]
 
     # Get filter lambdas for both source query types
-    source_query_type_lambda = filter_type(SourceQueryIdentifier)
+    source_query_type_lambda = filter_type(GrafanaIdentifier)
     status_lambda = lambda id: source_query_type_lambda(id) and id.query_name == "status"
     truth_lambda = lambda id: source_query_type_lambda(id) and id.query_name == "truth"
 
@@ -107,7 +106,7 @@ def _filter_to_running_pending(prog_data: ProgramData, data_repo: DataRepository
         #   with the same start_ts, end_ts, and type        
         created_types = set() 
 
-        # Filter identifiers with type SourceQueryIdentifier, query_name=truth, and matching 
+        # Filter identifiers with type GrafanaIdentifier, query_name=truth, and matching 
         #   timestamps 
         timestamps_filter = filter_timestamps(status_identifier.start_ts, status_identifier.end_ts)
         identifiers_filter = lambda identifier: truth_lambda(identifier) and timestamps_filter(identifier)
@@ -123,7 +122,7 @@ def _filter_to_running_pending(prog_data: ProgramData, data_repo: DataRepository
             values_df = _preprocess_df(values_df_raw, True, step)
             values_df = _apply_status_df(status_df, values_df)
 
-            identifier = SourceIdentifier(values_identifier.start_ts, values_identifier.end_ts, values_identifier.type)
+            identifier = GrafanaIdentifier(values_identifier.start_ts, values_identifier.end_ts, values_identifier.type)
             out_repository.add(identifier, values_df)         
 
             created_types.add(identifier.type)   
@@ -194,11 +193,11 @@ def _apply_status_df(status_df, values_df):
 
 def stitch(data_repo: DataRepository):
     """
-    Filter a DataRepository containing multiple SourceQueryIdentifiers to SourceIdentifiers
+    Filter a DataRepository containing multiple GrafanaIdentifiers to SourceIdentifiers
         based off of their running/pending status.
 
     Args:
-        data_repo (DataRepository): The input repository, contains SourceQueryIdentifiers to
+        data_repo (DataRepository): The input repository, contains GrafanaIdentifiers to
             be transformed.
     
     Returns:
@@ -224,7 +223,7 @@ def stitch(data_repo: DataRepository):
         def store_df():
             nonlocal df, df_ids
 
-            new_identifier = SourceIdentifier(df_ids[0].start_ts, df_ids[-1].end_ts, df_ids[0].type)
+            new_identifier = GrafanaIdentifier(df_ids[0].start_ts, df_ids[-1].end_ts, df_ids[0].type)
             out_data_repo.add(new_identifier, df)
 
         def reset_df():

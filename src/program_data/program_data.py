@@ -2,31 +2,16 @@
 #   class is created all of the same information can be accessed.
 import pandas as pd
 
-from src.program_data.settings import settings
+# from src.program_data.settings import settings
 from src.program_data.arguments import load_arguments, verify_arguments, ArgumentException
-from src.program_data.config import load_config, verify_config
+# from src.program_data.config import load_config, verify_config
 from src.data.data_repository import DataRepository
 
-def load_std_prog_data():
-    """
-    Loads the ProgramData in the context of a standard running program.
-    """
-
-    try:
-        args = load_arguments()
-    except ArgumentException as e:
-        print(f"Invalid arguments: {e}")
-        exit()
-
-    cfg = load_config(args.config)
-
-    return ProgramData(args, cfg)
-
 class ProgramData():
-    def __init__(self, args, config):
+    def __init__(self, args):
         
-        # Settings are truths about the program that shouldn't be mutable by the user
-        self.settings = settings
+        # # Settings are truths about the program that shouldn't be mutable by the user
+        # self.settings = settings
 
         self.args = args
         try:
@@ -35,7 +20,9 @@ class ProgramData():
             print(f"Invalid arguments: {e}")
             exit()
 
-        self.config = config
-        verify_config(self)
-    
+        # self.config = config
+        # verify_config(self)
+
         self.data_repo = DataRepository()
+
+        print("TODO: program_data.py:43 generate timeline")

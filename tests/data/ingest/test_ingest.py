@@ -17,13 +17,13 @@
 #     assert dfs[1].equals(gpu_df)
 
 # @pytest.skip
-# def test_ingest_grafana_df_cpu(cpu_df):
+# def test_grafana_df_cpu(cpu_df):
 #     df, obj1 = read_grafana_df(cpu_df)
 #     obj2 = SourceIdentifier(1704096000, 1706284800, "cpu")
 #     assert obj1 == obj2
 
 # @pytest.skip
-# def test_ingest_grafana_df_gpu(gpu_df):
+# def test_grafana_df_gpu(gpu_df):
 #     df, identifier = read_grafana_df(gpu_df)
 #     assert identifier == SourceIdentifier(1704736800, 1706284800, "gpu")
 

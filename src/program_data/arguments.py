@@ -3,7 +3,6 @@ import time
 import os
 import datetime
 
-from src.program_data.settings import settings
 from src.utils.timeutils import get_unix_timestamp_range
 
 def load_arguments():
@@ -35,6 +34,14 @@ def load_arguments():
 
 def verify_arguments(prog_data):
     args = prog_data.args
+
+    # Verify analysis arguments exist
+    print("TODO: arguments.py:39 verify analysis options exist from loaded plugins")
+    print("TODO: arguments.py:40 add all keyword to get all")
+    # for analysis_option in args.analysis_options:
+    #     if(analysis_option not in settings["analysis_settings"].keys()):
+    #         print(f"Failed to parse analysis option list, \"{option}\" is not recognized as a valid option.")
+    #         raise ValueError()
 
     if(not isinstance(args.analysis_options, list)):
         raise ArgumentException("Analysis options is not a list.")
@@ -111,14 +118,7 @@ def parse_time_range(time_range_str):
     return (int(time_str_arr[0]), int(time_str_arr[1]))
 
 def parse_analysis_options(analysis_options_str):
-    if(analysis_options_str == "all"):
-        return list(settings["analysis_settings"].keys())
-
     options = analysis_options_str.split(",")
-    for option in options:
-        if(option not in settings["analysis_settings"].keys()):
-            print(f"Failed to parse analysis option list, \"{option}\" is not recognized as a valid option.")
-            raise ValueError()
     return options
 
 def parse_file_list(path):

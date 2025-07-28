@@ -1,4 +1,4 @@
-from src.data.identifiers.identifier import *
+from data.identifier import *
 
 def filter_type(filtertype: type, strict=False):
     """
@@ -19,19 +19,6 @@ def filter_type(filtertype: type, strict=False):
         return lambda identifier: type(identifier) is filtertype
     else:
         return lambda identifier: isinstance(identifier, filtertype)
-
-def filter_source_type(resource_type: str):
-    """
-    Get a list of SourceIdentifiers that have the same type as resource_type.
-
-    Args:
-        resource_type (str): The target resource type for SourceIdentifiers.
-    Returns:
-        Callable[[Identifier], bool]: The lambda operation.
-    """
-
-    analysis_type_lambda = filter_type(SourceIdentifier)
-    return lambda identifier: analysis_type_lambda(identifier) and identifier.type == resource_type
 
 def filter_timestamps(start_ts: int, end_ts: int):
     """
