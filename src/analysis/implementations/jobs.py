@@ -3,7 +3,7 @@ import pandas as pd
 
 from src.data.data_repository import DataRepository
 from src.data.identifiers.identifier import SourceIdentifier, AnalysisIdentifier
-from src.analysis.grafana_df_cleaning import clear_duplicate_uids, clear_blacklisted_uids, has_time_column, clear_time_column
+from plugins.promql.grafana_df_cleaning import clear_duplicate_uids, clear_blacklisted_uids, has_time_column, clear_time_column
 
 def analyze_jobs_byns(identifier, data_repo: DataRepository):
     """

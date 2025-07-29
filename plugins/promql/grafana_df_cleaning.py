@@ -1,4 +1,4 @@
-from plugins.grafana.grafana_df_analyzer import _extract_column_data
+from plugins.promql.grafana_df_analyzer import _extract_column_data
 
 def has_time_column(df):
     return df.columns[0]=="Time"

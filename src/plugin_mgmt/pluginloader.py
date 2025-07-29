@@ -3,46 +3,146 @@ import importlib.util
 import inspect
 from dataclasses import dataclass
 
-from src.plugin_mgmt.plugins import IngestPlugin, Analysis, AnalysisPlugin
+from src.plugin_mgmt.plugins import IngestPlugin, Analysis, AnalysisPlugin, AnalysisDriverPlugin
 
 MODULE_DIR = "./plugins"
 
 @dataclass
 class LoadedPlugins:
     ingests: list[IngestPlugin]
-    analyses: dict[str, Analysis]
+    analysis_drivers: list[AnalysisDriverPlugin]
+    analyses: list[Analysis]
 
-def load_plugins():
-    loaded_ingests = []
-    loaded_analyses = {}
+    def __init__(self):
+        self.load_plugins()
+        self.cache_plugins()
 
-    for root, dirs, files in os.walk(MODULE_DIR):
-        if(root.endswith("__pycache__")):
-            continue
+#region Loading
+    def load_plugins(self):
+        """
+        Load all of the plugins in the plugins directory, automatically reads and populates
+            extensions of the types in plugins.py. Instantiated objects are stored in the internal
+            dataclass lists and can be read by the user.
+        
+        Returns: None
+        """
 
-        for filename in files:
-            if(not filename.endswith(".py")):
+        self.ingests = []
+        self.analysis_drivers = []
+        self.analyses = []
+
+        for root, dirs, files in os.walk(MODULE_DIR):
+            if(root.endswith("__pycache__")):
                 continue
 
-            path = os.path.join(root, filename)
-            module_name = os.path.splitext(os.path.relpath(path, MODULE_DIR))[0].replace(os.sep, "_")
+            for filename in files:
+                if(not filename.endswith(".py")):
+                    continue
 
-            spec = importlib.util.spec_from_file_location(module_name, path)
-            module = importlib.util.module_from_spec(spec)
-            spec.loader.exec_module(module)
+                path = os.path.join(root, filename)
+                self.load_plugins_from_file(path)
 
-            # Scan the module for classes that subclass IngestPlugin
-            for name, obj in inspect.getmembers(module, inspect.isclass):
-                if issubclass(obj, IngestPlugin) and obj is not IngestPlugin:
-                    instance = obj()
-                    loaded_ingests.append(instance)
-                elif(issubclass(obj, AnalysisPlugin) and obj is not AnalysisPlugin):
-                    instance = obj()
-                    for analysis in instance.get_analyses():
-                        if(analysis.name in loaded_analyses.keys()):
-                            print(f"ERROR: Analysis named \"{analysis.name}\" has already been loaded, but another Analysis plugin {name} is trying to load a new one.")
-                            continue
+    def load_plugins_from_file(self, path):
+        """
+        Load the plugins in a specific filepath. Instantiated objects stored in dataclass lists.
 
-                        loaded_analyses[analysis.name] = analysis
+        Returns: None
+        """
 
-    return LoadedPlugins(ingests=loaded_ingests, analyses=loaded_analyses)
+        module_name = os.path.splitext(os.path.relpath(path, MODULE_DIR))[0].replace(os.sep, "_")
+
+        spec = importlib.util.spec_from_file_location(module_name, path)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+
+        # Scan the module for classes that subclass IngestPlugin
+        for name, obj in inspect.getmembers(module, inspect.isclass):
+            self.load_object(name, obj, path)
+
+    def load_object(self, name, obj, path):
+        """
+        Load a specific object. Instantiated objects stored in dataclass lists.
+
+        Returns: None
+        """
+
+        # Safely instantiate the object, catching the exception and throwing an error message
+        def instantiate():
+            try:
+                return obj()                
+            except Exception as e:
+                print(f"Failed to load {name} as {type.__name__} in {path}: {e}")
+
+        # General instantiation- these objects can be insantiated and directly added to their
+        #   respective lists
+        type_to_list = {
+            IngestPlugin: self.ingests,
+            AnalysisDriverPlugin: self.analysis_drivers
+        }
+
+        for type in type_to_list.keys():
+            if(not issubclass(obj, type) or obj is type):
+                continue
+            
+            type_to_list[type].append(instantiate())
+            
+        # Special insantiation- these objects need extra processing to be added
+        if(issubclass(obj, AnalysisPlugin) and obj is not AnalysisPlugin):
+            instance = instantiate()
+            for analysis in instance.get_analyses():
+                if(analysis in self.analyses):
+                    print(f"ERROR: Analysis named \"{analysis.name}\" has already been loaded, but another Analysis plugin {name} is trying to load a new one.")
+                    continue
+
+                self.analyses.append(analysis)
+
+    def cache_plugins(self):
+        """
+        Caches various aspects about loaded plugins. Like storing analyses by name, 
+        """
+        pass
+#endregion
+
+#region Getters
+    def get_analysis_driver(self, analysis_type: type):
+        """
+        Get the analysis driver plugin for this type of analysis.
+
+        Raises:
+            Exception: There are no drivers serving this specific type.
+
+        Returns:
+            AnalysisDriver: The analysis driver for this specific type.
+        """
+
+        for driver in self.analysis_drivers:
+            if(driver.SERVED_TYPE == analysis_type):
+                return driver
+            
+        raise Exception(f"No analysis driver for type {analysis_type.__name__} found.")
+    
+    def get_analysis_by_name(self, analysis_name: str):
+        """
+        Get an analysis by name.
+
+        Raises:
+            Exception: There are no analyses with a matching name to analysis_name.
+
+        Returns:
+            Analysis: The analysis with a matching name to analysis_name.
+        """
+
+        for analysis in self.analyses:
+            if(analysis.name == analysis_name):
+                return analysis
+            
+        raise Exception(f"No analysis present with name {analysis_name}.")
+#endregion
+
+    def print_details(self):
+        """
+        Prints details to the console
+        """
+        print(f"Loaded ingests: {", ".join([type(ingest).__name__ for ingest in self.ingests])}")
+        print(f"Loaded analysis drivers: {", ".join([type(analysis_driver).__name__ for analysis_driver in self.analysis_drivers])}")
+        print(f"Loaded analyses: {", ".join([analysis.name for analysis in self.analyses])}")

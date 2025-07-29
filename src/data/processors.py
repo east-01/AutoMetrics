@@ -4,7 +4,7 @@ import calendar
 from src.data.data_repository import DataRepository
 from src.data.identifiers.identifier import *
 from src.data.filters import *
-from plugins.grafana.settings import settings
+from plugins.promql.settings import settings
 from src.utils.timeutils import get_range_printable, to_unix_ts, get_unix_timestamp_range
 
 def process_periods(data_repo: DataRepository) -> DataRepository:

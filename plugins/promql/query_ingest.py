@@ -4,10 +4,10 @@ import time
 import datetime
 import numpy as np
 
-from plugins.grafana.query_designer import *
-from plugins.grafana.query_executor import *
-from plugins.grafana.grafana_df_analyzer import *
-from plugins.grafana.query_preprocess import _preprocess_df
+from plugins.promql.query_designer import *
+from plugins.promql.query_executor import *
+from plugins.promql.grafana_df_analyzer import *
+from plugins.promql.query_preprocess import _preprocess_df
 from plugins.rci.rci_filters import filter_source_type
 from plugins.rci.rci_identifiers import GrafanaIdentifier
 from src.plugin_mgmt.plugins import IngestPlugin

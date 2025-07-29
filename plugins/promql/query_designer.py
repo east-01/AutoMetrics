@@ -2,7 +2,7 @@ from dataclasses import dataclass
 import math
 
 from src.utils.timeutils import get_range_printable, break_period_into_months
-from plugins.grafana.settings import settings
+from plugins.promql.settings import settings
 
 @dataclass(frozen=True)
 class QueryData():

@@ -5,7 +5,7 @@ import pandas as pd
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, project_root)
 
-from src.plugin_mgmt.pluginloader import load_plugins
+from src.plugin_mgmt.pluginloader import LoadedPlugins
 from src.program_data.arguments import load_arguments, ArgumentException
 from src.program_data.program_data import ProgramData
 
@@ -15,14 +15,16 @@ pd.set_option('future.no_silent_downcasting', True)
 ####################################
 #region Initialization
 ####################################
-out = load_plugins()
-print(out)
+print("Loading plugins...")
+plugins = LoadedPlugins()
+plugins.print_details()
 
 try:
     args = load_arguments()
 except ArgumentException as e:
     print(f"Invalid arguments: {e}")
     exit()
+
 ####################################
 #endregion
 ####################################

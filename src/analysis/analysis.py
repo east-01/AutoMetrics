@@ -3,7 +3,7 @@ from src.analysis.implementations.hours import *
 from src.analysis.implementations.jobs import *
 from src.analysis.implementations.meta_analysis import meta_analyze
 from src.data.data_repository import DataRepository
-from src.data.identifiers.identifier import Identifier, AnalysisIdentifier, SourceIdentifier
+from src.data.identifier import Identifier
 
 analysis_options_methods = {
 	"cpuhours": analyze_hours_byns,

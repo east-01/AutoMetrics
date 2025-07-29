@@ -3,7 +3,7 @@ import pandas as pd
 from src.program_data.program_data import ProgramData
 from src.data.data_repository import DataRepository
 from data.ingest.ingest_controller import *
-from plugins.grafana.grafana_df_analyzer import *
+from plugins.promql.grafana_df_analyzer import *
 from src.data.identifiers.identifier import SourceIdentifier
 
 class FileSystemIngestController(IngestController):

@@ -12,7 +12,7 @@ from src.utils.timeutils import get_range_as_month
 from src.data.filters import *
 from src.visualization.vis_impls import *
 from src.visualization.vis_variables import VisualizationVariables
-from plugins.grafana.settings import settings
+from plugins.promql.settings import settings
 from src.data.identifiers.identifier import *
 
 def vizualize(prog_data: ProgramData):
