@@ -7,7 +7,7 @@ queries:
             namespace=~"csusb.*|csu.*|ccp-.*|cal-poly-.*|sdsu-.*|csun-.*|nsf-maica",
             namespace!~"sdsu-jupyterhub.*"
         }
-    truth: |
+    values: |
         kube_pod_container_resource_requests{
             namespace=~"csusb.*|csu.*|ccp-.*|cal-poly-.*|sdsu-.*|csun-.*|nsf-maica",
             namespace!~"sdsu-jupyterhub.*", 

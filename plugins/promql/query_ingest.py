@@ -3,131 +3,76 @@ import math
 import time
 import datetime
 import numpy as np
+import os
 
 from plugins.promql.query_designer import *
 from plugins.promql.query_executor import *
 from plugins.promql.grafana_df_analyzer import *
 from plugins.promql.query_preprocess import _preprocess_df
 from plugins.rci.rci_filters import filter_source_type
-from plugins.rci.rci_identifiers import GrafanaIdentifier
-from src.plugin_mgmt.plugins import IngestPlugin
-from src.program_data.program_data import ProgramData
+from plugins.rci.rci_identifiers import GrafanaIdentifier, GrafanaIntermediateIdentifier
 from src.data.data_repository import DataRepository
-from src.utils.timeutils import to_unix_ts, from_unix_ts, get_range_printable
+from src.utils.timeutils import to_unix_ts, get_range_printable
 from src.data.filters import *
 
-class PromQLIngestController(IngestPlugin):
-    def ingest(self, prog_data: ProgramData) -> DataRepository:
-        
-        # The data repository that holds GrafanaIdentifiers, this is different from the
-        #   standard DataRepository because there are multiple queries per period and type, to be
-        #   used in the processing step where we only get pending/running pods.
-        data_repo: DataRepository = DataRepository()
+def run(query_config, timeline: Timeline):
+    # The data repository that holds GrafanaIdentifiers, this is different from the
+    #   standard DataRepository because there are multiple queries per period and type, to be
+    #   used in the processing step where we only get pending/running pods.
+    data_repo: DataRepository = DataRepository()
 
-        query_blocks = build_query_list(prog_data.config, prog_data.args)
+    cfg_name = query_config["cfg_name"]
+    step = query_config["step"]
+    period_cnt = len(timeline.periods)
+    query_count = period_cnt+len(settings["type_options"])*period_cnt
+    print(f"Loading data using ingest config \"{cfg_name}\". Will result in {query_count} query/queries.")
 
-        print(f"Loading data from {len(query_blocks)} query/queries:")
-
-        for query_block in query_blocks:
-            print(f"  {query_block}")
-
-            # Perform the query and transform the json response into a Grafana DataFrame
-            json_response = perform_query(query_block.query_url)
-            grafana_df = transform_query_response(json_response)
-
-            if(len(grafana_df) == 0):
-                print("WARN: Empty data frame")
-
-            # Convert values to numeric
-            grafana_df = convert_to_numeric(grafana_df)
-
-            # Read identifying data about DataFrame
-            period = (query_block.start_ts, query_block.end_ts)
-            resource_type = None
-            if(query_block.query_name == "truth"):
-                resource_type = get_resource_type(grafana_df)
-
-            identifier = GrafanaIdentifier(period[0], period[1], resource_type, query_block.query_name)
-            
-            data_repo.add(identifier, grafana_df)
-
-        # Normalize periods for filtering step, then perform filtering
-        # data_repo = process_periods(data_repo)
-
-        print("Applying running/pending filter...")
+    for period in timeline.periods:
 
         start_time = time.time()
-        data_repo = _filter_to_running_pending(self.prog_data, data_repo)
 
-        print(f"Filtering took {(time.time()-start_time):.2f} seconds.")
+        print(f"  {get_range_printable(period[0], period[1], step)}")
+        print(f"\r    Getting status...", end="", flush=True)
 
-        print("Stitching...")
+        # Pipeline for getting a Grafana type DataFrame from PromQL
+        status_url = build_query_url(query_config, "status", None, period) # Gets the URL for performing the query
+        status_response = perform_query(status_url) # Gets JSON response from web
+        status_df_nonnumeric = transform_query_response(status_response) # Transform the JSON to a DataFrame
+        status_df_raw = convert_to_numeric(status_df_nonnumeric) # Transform DF to numeric
+        status_df = _preprocess_df(status_df_raw, False, step) # Preprocess DF for application
 
-        start_time = time.time()
-        data_repo = stitch(data_repo)
+        for type in settings["type_options"]:
 
-        print(f"Stitching took {(time.time()-start_time):.2f} seconds.")
+            print(f"\r{" "*30}\r", end="", flush=True)
+            print(f"\r    Getting {type.upper()}...", end="", flush=True)
 
-        return data_repo
-
-def _filter_to_running_pending(prog_data: ProgramData, data_repo: DataRepository) -> DataRepository:
-    """
-    Filter a DataRepository containing multiple GrafanaIdentifiers to SourceIdentifiers
-        based off of their running/pending status.
-
-    Args:
-        data_repo (DataRepository): The input repository, contains GrafanaIdentifiers to
-            be transformed.
-    
-    Returns:
-        DataRepository: The output DataRepository, contains SourceIdentifiers.
-    """
-
-    out_repository = DataRepository()
-
-    step = prog_data.config["step"]
-
-    # Get filter lambdas for both source query types
-    source_query_type_lambda = filter_type(GrafanaIdentifier)
-    status_lambda = lambda id: source_query_type_lambda(id) and id.query_name == "status"
-    truth_lambda = lambda id: source_query_type_lambda(id) and id.query_name == "truth"
-
-    for status_identifier in data_repo.filter_ids(status_lambda):
-        status_df_raw = data_repo.get_data(status_identifier)
-
-        if(len(status_df_raw) == 0):
-            readable_period = get_range_printable(status_identifier.start_ts, status_identifier.end_ts, 3600)
-            print(f"Skipping applying status filter to {readable_period} the status DataFrame is empty")
-            continue
-
-        status_df = _preprocess_df(status_df_raw, False, step)
-
-        # Tracks the set of created types, used to protect from creating multiple SourceIdentifiers
-        #   with the same start_ts, end_ts, and type        
-        created_types = set() 
-
-        # Filter identifiers with type GrafanaIdentifier, query_name=truth, and matching 
-        #   timestamps 
-        timestamps_filter = filter_timestamps(status_identifier.start_ts, status_identifier.end_ts)
-        identifiers_filter = lambda identifier: truth_lambda(identifier) and timestamps_filter(identifier)
-        identifiers = data_repo.filter_ids(identifiers_filter)
-
-        for values_identifier in identifiers:
-            if(values_identifier.type in created_types):
-                print(f"ERROR: Identifier of type \"{values_identifier.type}\" is already in created_types for this timestamp range. This shouldn't happen.")
-                continue
-        
-            values_df_raw = data_repo.get_data(values_identifier)
-
+            # The same pipeline as above
+            values_url = build_query_url(query_config, "values", type, period)
+            values_response = perform_query(values_url)
+            values_df_nonnumeric = transform_query_response(values_response)
+            values_df_raw = convert_to_numeric(values_df_nonnumeric)
             values_df = _preprocess_df(values_df_raw, True, step)
-            values_df = _apply_status_df(status_df, values_df)
 
-            identifier = GrafanaIdentifier(values_identifier.start_ts, values_identifier.end_ts, values_identifier.type)
-            out_repository.add(identifier, values_df)         
+            print(f"\r{" "*30}\r", end="", flush=True)
+            print(f"\r    Applying status to {type.upper()}...", end="", flush=True)
 
-            created_types.add(identifier.type)   
+            final_values_df = _apply_status_df(status_df, values_df)
 
-    return out_repository
+            identifier = GrafanaIdentifier(period[0], period[1], type, cfg_name)
+            data_repo.add(identifier, final_values_df)
+
+        print(f"\r{" "*30}\r", end="", flush=True)
+        print(f"\r    Took {(time.time()-start_time):.2f}s")
+
+    print("  Stitching...", end="", flush=True)
+
+    start_time = time.time()
+    data_repo = _stitch(data_repo)
+
+    print(f"\r{" "*30}\r", end="", flush=True)
+    print(f"\r  Stitching took {(time.time()-start_time):.2f} seconds.")
+
+    return data_repo
 
 def _apply_status_df(status_df, values_df):
     """
@@ -191,7 +136,7 @@ def _apply_status_df(status_df, values_df):
 
     return values_df
 
-def stitch(data_repo: DataRepository):
+def _stitch(data_repo: DataRepository):
     """
     Filter a DataRepository containing multiple GrafanaIdentifiers to SourceIdentifiers
         based off of their running/pending status.
@@ -223,7 +168,7 @@ def stitch(data_repo: DataRepository):
         def store_df():
             nonlocal df, df_ids
 
-            new_identifier = GrafanaIdentifier(df_ids[0].start_ts, df_ids[-1].end_ts, df_ids[0].type)
+            new_identifier = GrafanaIdentifier(df_ids[0].start_ts, df_ids[-1].end_ts, df_ids[0].type, df_ids[0].query_cfg)
             out_data_repo.add(new_identifier, df)
 
         def reset_df():

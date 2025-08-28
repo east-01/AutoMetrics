@@ -3,6 +3,7 @@ import math
 
 from src.utils.timeutils import get_range_printable, break_period_into_months
 from plugins.promql.settings import settings
+from src.data.timeline import Timeline
 
 @dataclass(frozen=True)
 class QueryData():
@@ -18,7 +19,7 @@ class QueryData():
     def __str__(self) -> str:
         return f"{self.query_name} {self.type.upper()} {get_range_printable(self.start_ts, self.end_ts)}"
 
-def build_query_list(config, args) -> list[QueryData]:
+def build_query_list(config, timeline: Timeline) -> list[QueryData]:
     """
     Build a list of queries by analysing the state of the current ProgramData.
     
@@ -31,26 +32,13 @@ def build_query_list(config, args) -> list[QueryData]:
             useful information about said query.
     """
 
-    analysis_options = settings['analysis_settings']
-
-    required_types = set()
-    for analysis in args.analysis_options:
-        for type in analysis_options[analysis]['types']:
-            required_types.add(type)
-
-    orig_periods = break_period_into_months(args.period[0], args.period[1])
-    periods = []
-    for period in orig_periods:
-        sub_periods = break_down_period(period[0], period[1])
-        periods.extend(sub_periods)
-
     query_list = []
     for query_name in config["queries"]:
 
         query_string_orig: str = config["queries"][query_name]
 
-        for period in periods:
-            for type in required_types:
+        for period in timeline.periods:
+            for type in settings['type_options']:
                 
                 type_string = settings['type_strings'][type]
                 query_string = query_string_orig.replace(settings['type_string_identifier'], type_string)
@@ -83,6 +71,23 @@ def build_query_list(config, args) -> list[QueryData]:
 
     return query_list
 
+def build_query_url(config, query_name, type, period):
+    query_string = config["queries"][query_name]
+    
+    if(type is not None):
+        type_string = settings['type_strings'][type]
+        query_string = query_string.replace(settings['type_string_identifier'], type_string)
+
+    return build_url(
+        config["base_url"], 
+        {
+            "start": period[0],
+            "end": period[1],
+            "step": config["step"],
+            "query": query_string
+        }
+    )
+
 def build_url(base, url_options = {}):
     """
     Build a URL using a base url and additional options.
@@ -99,21 +104,3 @@ def build_url(base, url_options = {}):
         url += "&".join(option_pairs)
 
     return url        
-
-def break_down_period(start_ts, end_ts, target_length = 60*60*24*7):
-    """
-    Given a starting and ending timestamp, return a list of starting and ending timestamps that
-      do not exceed the target length.
-    """
-
-    period_length = end_ts-start_ts
-    divisions = math.ceil(period_length/target_length)
-    sub_period_length = period_length/divisions
-    
-    periods = []
-    for i in range(divisions):
-        sub_start_ts = start_ts + sub_period_length*i
-        sub_end_ts = start_ts + sub_period_length*(i+1) - 1
-        periods.append((sub_start_ts, sub_end_ts))
-
-    return periods

@@ -1,5 +1,6 @@
 import datetime
 import calendar
+import math
 
 def from_unix_ts(timestamp):
     """
@@ -104,4 +105,20 @@ def break_period_into_months(start_ts, end_ts):
     
     return periods
             
-                
+def break_down_period(start_ts, end_ts, target_length = 60*60*24*7):
+    """
+    Given a starting and ending timestamp, return a list of starting and ending timestamps that
+      do not exceed the target length.
+    """
+
+    period_length = end_ts-start_ts
+    divisions = math.ceil(period_length/target_length)
+    sub_period_length = period_length/divisions
+    
+    periods = []
+    for i in range(divisions):
+        sub_start_ts = start_ts + sub_period_length*i
+        sub_end_ts = start_ts + sub_period_length*(i+1) - 1
+        periods.append((sub_start_ts, sub_end_ts))
+
+    return periods

@@ -75,6 +75,7 @@ class LoadedPlugins:
 
         # General instantiation- these objects can be insantiated and directly added to their
         #   respective lists
+
         type_to_list = {
             IngestPlugin: self.ingests,
             AnalysisDriverPlugin: self.analysis_drivers
@@ -87,6 +88,7 @@ class LoadedPlugins:
             type_to_list[type].append(instantiate())
             
         # Special insantiation- these objects need extra processing to be added
+        
         if(issubclass(obj, AnalysisPlugin) and obj is not AnalysisPlugin):
             instance = instantiate()
             for analysis in instance.get_analyses():
@@ -104,6 +106,14 @@ class LoadedPlugins:
 #endregion
 
 #region Getters
+    def get_ingest_plugin_by_name(self, name: str):
+        for ingest_plugin in self.ingests:
+            ingest_pl_name = type(ingest_plugin).__name__
+            if(ingest_pl_name == name):
+                return ingest_plugin
+            
+        raise Exception(f"Failed to get ingest plugin by name \"{name}\"")
+
     def get_analysis_driver(self, analysis_type: type):
         """
         Get the analysis driver plugin for this type of analysis.

@@ -37,18 +37,30 @@ def verify_arguments(prog_data):
 
     # Verify analysis arguments exist
     print("TODO: arguments.py:39 verify analysis options exist from loaded plugins")
-    print("TODO: arguments.py:40 add all keyword to get all")
-    # for analysis_option in args.analysis_options:
-    #     if(analysis_option not in settings["analysis_settings"].keys()):
-    #         print(f"Failed to parse analysis option list, \"{option}\" is not recognized as a valid option.")
-    #         raise ValueError()
 
     if(not isinstance(args.analysis_options, list)):
         raise ArgumentException("Analysis options is not a list.")
 
+    analyses = prog_data.loaded_plugins.analyses
+
+    if(len(args.analysis_options) == 1 and args.analysis_options[0] == "all"):
+        args.analysis_options = [analysis.name for analysis in analyses]
+
+    for analysis_option in args.analysis_options:
+        try:
+            prog_data.loaded_plugins.get_analysis_by_name(analysis_option)
+        except Exception as e:
+            raise ArgumentException(f"Failed to parse analysis option list, \"{analysis_option}\" is not recognized as loaded analysis option.")
+
     # Populate additional analyses to perform from requirements
     for to_perform in args.analysis_options:
-        for requirement in prog_data.settings["analysis_settings"][to_perform]["requires"]:
+        to_perform_analysis = prog_data.loaded_plugins.get_analysis_by_name(to_perform)
+        prereq_analyses = to_perform_analysis.prereq_analyses
+
+        if(prereq_analyses is None):
+            continue
+
+        for requirement in prereq_analyses:
             if(requirement not in args.analysis_options):
                 print(f"Added additional analysis \"{requirement}\" as it is a requirement of \"{to_perform}\"")
                 args.analysis_options.append(requirement)
@@ -61,9 +73,6 @@ def verify_arguments(prog_data):
         now = int(time.time())
         if(args.period[0] > now or args.period[1] > now):
             raise ArgumentException("Either the start or end times of the period exceeds current time.")
-
-class ArgumentException(Exception):
-    pass
 
 def is_integer(value):
     """

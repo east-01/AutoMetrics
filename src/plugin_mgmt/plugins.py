@@ -8,7 +8,20 @@ from src.data.identifier import Identifier
 
 class IngestPlugin(ABC):    
     @abstractmethod
-    def ingest(self, prog_data: ProgramData) -> DataRepository:
+    def verify_config_section(config_section: dict):
+        """
+        Verify the configuration section that will be passed to this IngestPlugin.
+
+        Raises:
+            ConfigurationException: The configuration isn't expected or misconfigured.
+
+        Returns:
+            None
+        """
+        pass
+
+    @abstractmethod
+    def ingest(self, prog_data: ProgramData, config_section: dict) -> DataRepository:
         """
         Ingest data from a source.
 
