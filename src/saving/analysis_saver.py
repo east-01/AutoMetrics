@@ -57,7 +57,7 @@ class AnalysisSaver(Saver):
 
         result = data_repo.get_data(identifier)
         
-        src_id = identifier.find_source()
+        src_id = identifier.find_base()
         src_metadata = data_repo.get_metadata(src_id)
 
         out_file_name = src_metadata["out_file_name"]

@@ -1,4 +1,4 @@
-from data.identifier import *
+from src.data.identifier import *
 
 def filter_type(filtertype: type, strict=False):
     """

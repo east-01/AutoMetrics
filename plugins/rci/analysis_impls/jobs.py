@@ -2,15 +2,16 @@
 import pandas as pd
 
 from src.data.data_repository import DataRepository
-from src.data.identifiers.identifier import SourceIdentifier, AnalysisIdentifier
+from src.data.identifier import AnalysisIdentifier
 from plugins.promql.grafana_df_cleaning import clear_duplicate_uids, clear_blacklisted_uids, has_time_column, clear_time_column
+from plugins.rci.rci_identifiers import GrafanaIdentifier
 
 def analyze_jobs_byns(identifier, data_repo: DataRepository):
     """
     Unpack the Grafana DataFrame from the DataRepository and perform _analyze_jobs_byns_ondf on it.
     
     Args:
-        identifier (SourceIdentifier): The identifier for the Grafana DataFrame.
+        identifier (GrafanaIdentifier): The identifier for the Grafana DataFrame.
     Returns:
         pd.DataFrame: Result from _analyze_jobs_byns_ondf.
     """
@@ -18,7 +19,7 @@ def analyze_jobs_byns(identifier, data_repo: DataRepository):
     df = data_repo.get_data(identifier)
     return _analyze_jobs_byns_ondf(df)
 
-def analyze_cpu_only_jobs_byns(identifier: SourceIdentifier, data_repo: DataRepository):
+def analyze_cpu_only_jobs_byns(identifier: GrafanaIdentifier, data_repo: DataRepository):
     """
     Unpack the CPU Grafana DataFrame from the DataRepository and perform _analyze_jobs_byns_ondf on 
         it. Separate from the standard implementation of analyze_jobs_byns because we have to find
@@ -27,14 +28,14 @@ def analyze_cpu_only_jobs_byns(identifier: SourceIdentifier, data_repo: DataRepo
         considered a CPU only job.
     
     Args:
-        identifier (SourceIdentifier): The identifier for the Grafana DataFrame.
+        identifier (GrafanaIdentifier): The identifier for the Grafana DataFrame.
     Returns:
         pd.DataFrame: Result from _analyze_jobs_byns_ondf.
     """
 
     # We have to locate the corresponding GPU data block
     # The UIDs in the GPU will be used to clear blacklisted IDs
-    gpu_identifier = SourceIdentifier(identifier.start_ts, identifier.end_ts, "gpu")
+    gpu_identifier = GrafanaIdentifier(identifier.start_ts, identifier.end_ts, "gpu", identifier.query_cfg)
     if(not data_repo.contains(gpu_identifier)):
         raise Exception("Failed to analyze cpu only jobs, the corresponding gpu data_block could not be found.")
     
@@ -113,9 +114,9 @@ def analyze_all_jobs_total(cpu_identifier: AnalysisIdentifier, data_repo: DataRe
         int: The sum of the count column.
     """
 
-    src_id = cpu_identifier.find_source()
+    src_id = cpu_identifier.find_base()
 
     cpu_jobs_tot = data_repo.get_data(cpu_identifier)
-    gpu_jobs_tot = data_repo.get_data(AnalysisIdentifier(AnalysisIdentifier(SourceIdentifier(src_id.start_ts, src_id.end_ts, "gpu"), "gpujobs"), "gpujobstotal"))
+    gpu_jobs_tot = data_repo.get_data(AnalysisIdentifier(AnalysisIdentifier(GrafanaIdentifier(src_id.start_ts, src_id.end_ts, "gpu", src_id.query_cfg), "gpujobs"), "gpujobstotal"))
 
     return cpu_jobs_tot + gpu_jobs_tot

@@ -24,7 +24,7 @@ class TimeStampIdentifier(Identifier):
     end_ts: int
 
     def __hash__(self) -> int:
-        return hash((self.start_ts, self.end_ts, self.type))
+        return hash((self.start_ts, self.end_ts))
 
     def __eq__(self, other) -> bool:
         return isinstance(other, TimeStampIdentifier) and self.start_ts == other.start_ts and self.end_ts == other.end_ts
@@ -37,7 +37,7 @@ class AnalysisIdentifier(Identifier):
     """
     Identifier for an anlysis of something else, can either be a SourceIdentifier or another
       AnalysisIdentifier. This means there can be multiple layers of AnalysisIdentifiers before you
-      reach the root SourceIdentifier. Use find_source() to find the root.
+      reach the root SourceIdentifier. Use find_base() to find the root.
     """
     on: Identifier
     analysis: str
@@ -60,10 +60,10 @@ class AnalysisIdentifier(Identifier):
             Identifier: The base identifier that this analysis is based off of.
         """
         on = self.on
-        while(on is not None):
+        while(on is not None and isinstance(on, AnalysisIdentifier)):
             on = on.on
 
-        return None
+        return on
 
     def is_meta_analysis(self):
         """

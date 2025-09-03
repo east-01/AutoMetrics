@@ -32,7 +32,7 @@ class DataRepository():
         if(metadata is None):
             metadata = {}
 
-        if(not issubclass(type(identifier), Identifier)):
+        if(not isinstance(identifier, Identifier)):
             raise ValueError(f"Cannot add data for \"{identifier}\" identifier type \"{type(identifier)}\" is not a subclass of Identifier.")
         if(self.contains(identifier)):
             raise ValueError(f"Cannot add data for \"{identifier}\" it already exists in the repo.\nCurrent repo:\n  {"\n  ".join(str(key) for key in self._data.keys())}")

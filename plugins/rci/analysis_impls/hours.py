@@ -5,7 +5,8 @@ from src.data.data_repository import DataRepository
 from plugins.promql.grafana_df_cleaning import has_time_column, clear_time_column, _extract_column_data
 from plugins.promql.grafana_df_analyzer import get_period
 from plugins.promql.settings import settings
-from src.data.identifiers.identifier import *
+from plugins.rci.rci_identifiers import GrafanaIdentifier, AvailableHoursIdentifier
+from src.data.identifier import *
 from src.utils.tideutils import *
 
 def analyze_hours_byns(identifier, data_repo: DataRepository):
@@ -72,17 +73,21 @@ def analyze_hours_total(identifier, data_repo: DataRepository):
 	df = data_repo.get_data(identifier)
 	total_hours = df['Hours'].sum()
 
-	src_id = identifier.find_source()
-	avail_hrs_analysis_id = AnalysisIdentifier(src_id, src_id.type + "hoursavailable")
-	avail_hrs = data_repo.get_data(avail_hrs_analysis_id)
+	print("TODO: hours.py:76 add back in hours check after implementing hours available benchmarks")
+	# src_id = identifier.find_base()
+	# src_as_timestamp = TimeStampIdentifier(src_id.start_ts, src_id.end_ts)
+	# print(src_id)
+	# avail_hrs_analysis_id = AvailableHoursIdentifier(src_as_timestamp, src_id.type + "hoursavailable", src_id.type, "default")
+	# avail_hrs = data_repo.get_data(avail_hrs_analysis_id)
+	# print(avail_hrs)
 
-	# Ensure the hours we calculated doesn't exceed the maximum possible hours
-	if(total_hours > avail_hrs):
-		raise Exception(f"The total hours scheduled {total_hours} exceeds the maximum amount of resource hours available {avail_hrs}.")
+	# # Ensure the hours we calculated doesn't exceed the maximum possible hours
+	# if(total_hours > avail_hrs):
+	# 	raise Exception(f"The total hours scheduled {total_hours} exceeds the maximum amount of resource hours available {avail_hrs}.")
 
 	return total_hours
 
-def analyze_available_hours(identifier: SourceIdentifier, data_repo: DataRepository):
+def analyze_available_hours(identifier: GrafanaIdentifier, data_repo: DataRepository):
 	"""
 	Unpack the Grafana DataFrame from the DataRepository and perform _analyze_available_hours_ondf
 		on it.

@@ -12,15 +12,13 @@ from src.program_data.config import load_config
 from src.program_data.program_data import ProgramData
 from src.data.data_repository import DataRepository
 from src.program_data.config import ConfigurationException
+from src.analysis.analysis import get_analysis_order
 
 # Hides warnings for .fillna() calls
 pd.set_option('future.no_silent_downcasting', True)
 
-####################################
 #region Initialization
-####################################
-
-print("Loading plugins...")
+print("### Loading plugins...")
 plugins = LoadedPlugins()
 plugins.print_details()
 
@@ -36,95 +34,96 @@ except Exception as e:
     print(f"Failed to load config: {e}")
     exit()
 
+print()
+
 prog_data = ProgramData(plugins, args, config)
 
-####################################
-#endregion
-####################################
+# Verify ConfigurablePlugin config sections
+print("Verifying config sections...")
+successes = 0
+config_checks = 0
+for plugin_type in ["ingest", "analysisdriver"]:
+    for plugin_name in prog_data.config[plugin_type].keys():
+        try:
+            plugin = prog_data.loaded_plugins.get_plugin_by_name(plugin_type, plugin_name)
+        except Exception as e:
+            print(e)
+            continue
 
+        config_section = prog_data.config[plugin_type][plugin_name]
+        
+        config_checks += 1
+        try:
+            plugin.verify_config_section(config_section)
+            successes += 1
+        except ConfigurationException as e:
+            print(f"Failed to verify config section for \"{plugin_type}\" plugin \"{plugin_name}\": {e}")
+            continue
+
+if(successes != config_checks):
+    print(f"WARNING: {successes}/{config_checks} configs valid.")
+else:
+    print(f"All configs valid.")
+
+print()
+#endregion
+
+#region Ingest
+print("### Ingesting data...")
 prog_data.data_repo = DataRepository()
 
-for ingest_plugin_name in prog_data.config["ingest"]:
-    try:
-        ingest_plugin = prog_data.loaded_plugins.get_ingest_plugin_by_name(ingest_plugin_name)
-    except Exception as e:
-        print(e)
-        continue
+for ingest_plugin_name in prog_data.config["ingest"].keys():
+    # We can safely do this, this is checked above when verifying ConfigurablePlugins
+    ingest_plugin = prog_data.loaded_plugins.get_plugin_by_name("ingest", ingest_plugin_name)
 
-    config_section = prog_data.config["ingest"][ingest_plugin_name]
-    
-    try:
-        ingest_plugin.verify_config_section(config_section)
-    except ConfigurationException as e:
-        print(f"Failed to verify config section for ingest plugin \"{ingest_plugin_name}\": {e}")
-        continue
+    ingest_config_section = prog_data.config["ingest"][ingest_plugin_name]
 
     try:
-        ingested_repo = ingest_plugin.ingest(prog_data, config_section)
+        ingested_repo = ingest_plugin.ingest(prog_data, ingest_config_section)
         prog_data.data_repo.join(ingested_repo)
     except Exception as e:
         print(f"Ingest plugin \"{ingest_plugin_name}\" failed:")
         traceback.print_exc()        
-        continue
+        exit(2)
 
+# prog_data.data_repo.print_contents()
+print()
+#endregion
+
+#region Analysis
+print("### Analyzing...")
+analysis_order = get_analysis_order(prog_data)
+analysis_order_printable = ", ".join([analysis.name for analysis in analysis_order])
+
+print(f"Will perform analyses: {analysis_order_printable}")
+for analysis in analysis_order:
+    driver = plugins.get_analysis_driver(type(analysis))
+
+    try:
+        config_section = prog_data.config["analysisdriver"][plugin_name]
+    except KeyError as e:
+        # Check if the driver can handle not having config, if so we can skip passing it
+        if(driver.verify_config_section(None)):
+            config_section = None
+        else:
+            raise Exception(f"Analysis driver failed, it was expecting config but didn't get any.")
+
+
+    driver.run_analysis(analysis, prog_data, config_section)
+
+print()
+#endregion
+
+print("TODO: Saving")
 prog_data.data_repo.print_contents()
 
-print(f"Will perform analyses: {", ".join(prog_data.args.analysis_options)}")
-print("")
+try:
+    import psutil
+    psutil_available = True
+except ImportError:
+    psutil_available = False
 
-# # Load DataFrames
-# print("Starting ingest...")
-# prog_data.data_repo = ingest(prog_data)
-# # prog_data.data_repo = process_periods(prog_data.data_repo)
-# prog_data.data_repo = generate_metadata(prog_data.data_repo, prog_data.config)
-
-# if(has_overlaps(prog_data.data_repo)):
-#     print("Error: The ingested DataRepository has overlapping timestamps for some of its SourceData. This is not allowed- if using FileSystem ingest try PromQL instead.")
-
-# if(prog_data.args.verbose):
-#     prog_data.data_repo.print_contents()
-# print("")
-
-# # Analyze dataframes
-# print("Starting analysis...")
-# analyze(prog_data)
-
-# # Summarize analysis results
-# if(can_summarize(prog_data)):
-#     summarize(prog_data)
-# print("")
-
-# # Visualize analysis results
-# print("Generating visualizations...")
-# vizualize(prog_data)
-# if(prog_data.args.verbose):
-#     prog_data.data_repo.print_contents()
-# print("")
-
-# # Save output data, only if an out directory is specified
-# out_dir = prog_data.args.outdir
-# if(out_dir is not None):
-#     print("Saving data...")    
-#     if(not os.path.exists(out_dir)):
-#         os.mkdir(out_dir)
-
-#     for saver in [DataFrameSaver(prog_data), AnalysisSaver(prog_data), SummarySaver(prog_data), VizualizationsSaver(prog_data)]:
-#         try:
-#             saver.save()
-#         except Exception as e:
-#             print(f"Saving failed for saver \"{type(saver)}\": {e}")
-#     print("")
-
-# # Print summaries
-# print_all_summaries(prog_data.data_repo)
-
-# try:
-#     import psutil
-#     psutil_available = True
-# except ImportError:
-#     psutil_available = False
-
-# if(psutil_available):
-#     process = psutil.Process(os.getpid())
-#     memory_info = process.memory_info()
-#     print(f"\nMemory usage: {memory_info.rss / (1024 * 1024):.2f} MB")
+if(psutil_available):
+    process = psutil.Process(os.getpid())
+    memory_info = process.memory_info()
+    print(f"\nMemory usage: {memory_info.rss / (1024 * 1024):.2f} MB")

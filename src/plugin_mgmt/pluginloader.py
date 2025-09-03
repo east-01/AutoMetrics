@@ -1,6 +1,7 @@
 import os
 import importlib.util
 import inspect
+import sys
 from dataclasses import dataclass
 
 from src.plugin_mgmt.plugins import IngestPlugin, Analysis, AnalysisPlugin, AnalysisDriverPlugin
@@ -31,7 +32,11 @@ class LoadedPlugins:
         self.analysis_drivers = []
         self.analyses = []
 
-        for root, dirs, files in os.walk(MODULE_DIR):
+        self.load_plugins_from_directory(MODULE_DIR)
+        self.load_plugins_from_directory("./src/plugin_mgmt/builtin/")
+
+    def load_plugins_from_directory(self, directory):
+        for root, dirs, files in os.walk(directory):
             if(root.endswith("__pycache__")):
                 continue
 
@@ -49,11 +54,21 @@ class LoadedPlugins:
         Returns: None
         """
 
-        module_name = os.path.splitext(os.path.relpath(path, MODULE_DIR))[0].replace(os.sep, "_")
+        # module_name = os.path.splitext(os.path.relpath(path, MODULE_DIR))[0].replace(os.sep, "_")
 
-        spec = importlib.util.spec_from_file_location(module_name, path)
-        module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
+        # spec = importlib.util.spec_from_file_location(module_name, path)
+        # module = importlib.util.module_from_spec(spec)
+        # # module = importlib.import_module(module_name)
+        # spec.loader.exec_module(module)
+
+        module_name = os.path.splitext(os.path.relpath(path, MODULE_DIR))[0].replace(os.sep, "_")
+        if module_name in sys.modules:
+            module = sys.modules[module_name]
+        else:
+            spec = importlib.util.spec_from_file_location(module_name, path)
+            module = importlib.util.module_from_spec(spec)
+            sys.modules[module_name] = module
+            spec.loader.exec_module(module)
 
         # Scan the module for classes that subclass IngestPlugin
         for name, obj in inspect.getmembers(module, inspect.isclass):
@@ -106,13 +121,23 @@ class LoadedPlugins:
 #endregion
 
 #region Getters
-    def get_ingest_plugin_by_name(self, name: str):
-        for ingest_plugin in self.ingests:
-            ingest_pl_name = type(ingest_plugin).__name__
-            if(ingest_pl_name == name):
-                return ingest_plugin
+    def get_plugin_by_name(self, plugin_type: str, name: str):
+        lists = {
+            "ingest": self.ingests,
+            "analysisdriver": self.analysis_drivers
+        }
+
+        if(plugin_type not in lists.keys()):
+            raise Exception(f"Plugin type \"{plugin_type}\" not recognized. Supported values are: {", ".join(lists.keys())}")
+
+        list_to_look = lists[plugin_type]
+
+        for plugin in list_to_look:
+            pl_name = type(plugin).__name__
+            if(pl_name == name):
+                return plugin
             
-        raise Exception(f"Failed to get ingest plugin by name \"{name}\"")
+        raise Exception(f"Failed to get \"{plugin_type}\" plugin by name \"{name}\"")
 
     def get_analysis_driver(self, analysis_type: type):
         """

@@ -30,18 +30,18 @@ class VisualizationVariables():
             # Resolve the corresponding analysis variable with matching SourceIdentifier
             variable_value = None
             for comp_id in data_repo.filter_ids(filter_analyis_type(targ_analysis)):
-                if(comp_id.find_source() == identifier.find_source()):
+                if(comp_id.find_base() == identifier.find_base()):
                     variable_value = data_repo.get_data(comp_id)
 
             if(variable_value is None):
-                raise Exception(f"Failed to resolve corresponding analysis variable for {targ_analysis}, current SourceID: {identifier.find_source()}")
+                raise Exception(f"Failed to resolve corresponding analysis variable for {targ_analysis}, current SourceID: {identifier.find_base()}")
 
             if(variable_value is None):
                 variable_value = variable_name
             else:
                 self.parsed_variables[variable_name] = variable_value
 
-        src_id: SourceIdentifier = identifier.find_source()
+        src_id: SourceIdentifier = identifier.find_base()
         start_dt = datetime.datetime.fromtimestamp(src_id.start_ts)
 
         self.parsed_variables["MONTH"] = calendar.month_name[start_dt.month]

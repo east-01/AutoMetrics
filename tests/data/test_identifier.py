@@ -27,7 +27,7 @@ def test_nested_source():
     aid2 = AnalysisIdentifier(aid1, "analysis2")
     aid3 = AnalysisIdentifier(aid2, "analysis3")
 
-    assert srcid == aid3.find_source()
+    assert srcid == aid3.find_base()
 
 def test_meta_analysis():
     aid1 = AnalysisIdentifier(None, "analysis1")

@@ -1,120 +1,74 @@
+from collections import defaultdict
+import heapq
+from typing import Dict, List
+
 from src.program_data.program_data import ProgramData
-from src.analysis.implementations.hours import *
-from src.analysis.implementations.jobs import *
-from src.analysis.implementations.meta_analysis import meta_analyze
-from src.data.data_repository import DataRepository
-from src.data.identifier import Identifier
-
-analysis_options_methods = {
-	"cpuhours": analyze_hours_byns,
-	"cpuhourstotal": analyze_hours_total,
-	"cpuhoursavailable": analyze_available_hours,
-	"cpujobs": analyze_cpu_only_jobs_byns,
-	"cpujobstotal": analyze_jobs_total,
-	"gpuhours": analyze_hours_byns,
-	"gpuhourstotal": analyze_hours_total,
-	"gpuhoursavailable": analyze_available_hours,
-	"gpujobs": analyze_jobs_byns,
-	"gpujobstotal": analyze_jobs_total,
-	"jobstotal": analyze_all_jobs_total
-}
-
-def analyze(prog_data: ProgramData):
-	"""
-	Analyze the current ProgramData for the target analysis options selected. Analysis options are
-	  performed for each data block, meaning there will be a separate set of analysis results for
-	  each.
-	Results are stored in a dictionary with the analysis name as the key and the result output as 
-	  the value.
-	Results are placed in ProgramData#data_repo as they are generated so that other methods can
-	  use them.
-	"""
-	data_repo: DataRepository = prog_data.data_repo
-
-	analyses_to_perform = get_analysis_order(prog_data)
-
-	print(f"Analysis perform order: {", ".join(analyses_to_perform)}")
-
-	# Fulfilled analyses is used to ensure all analysis that were requested were performed. All
-	#   analyses may not be fulfilled if the user provides an input directory without all the
-	#   required csv files. For example, the user requests gpuhours but only provides cpu dfs.
-	fulfilled_analyses = set()
-
-	for analysis in analyses_to_perform:
-		analysis_settings = prog_data.settings["analysis_settings"][analysis]
-
-		# When the analysis settings do not have a filter it's considered a meta analysis, see
-		#   meta_analyze description for more details.
-		is_standard_analysis = "filter" in analysis_settings.keys()
-
-		if(is_standard_analysis):
-			# Perform a standard analysis.
-
-			# Get filter and apply to data_repo, the filter finds the Identifiers that the analysis
-			#   will use in its calculation.
-			analysis_filter = analysis_settings["filter"]
-			identifiers = data_repo.filter_ids(analysis_filter)
-
-			# If the length of the target identifiers is zero then we can't perform and fulfill 
-			#   the analysis.
-			if(len(identifiers) == 0):
-				continue
-
-			# Get the analysis method implementation for this specific analysis.
-			# For example, if the analysis is cpuhours the analysis_method will be 
-			#   src/analysis/implementations/analyze_hours_byns.
-			analysis_method = analysis_options_methods[analysis]
-
-			print(f"  Performing {analysis} on {len(identifiers)} target(s).")
-
-			for identifier in identifiers:
-				analysis_result = analysis_method(identifier, data_repo)
-
-				# Generate identifier and add to repository.
-				analysis_identifier = AnalysisIdentifier(identifier, analysis)
-				data_repo.add(analysis_identifier, analysis_result)
-
-			fulfilled_analyses.add(analysis)
-
-		else:
-			# Perform a meta analysis.
-
-			print(f"  Performing {analysis}.")
-
-			analysis_result, analysis_metadata = meta_analyze(analysis_settings["requires"], data_repo)
-
-			# Generate identifier and add to repository.
-			analysis_identifier = AnalysisIdentifier(None, analysis)
-			data_repo.add(analysis_identifier, analysis_result, analysis_metadata)
-
-			fulfilled_analyses.add(analysis)     			
-				
-	# Check with fulfilled_analyses to ensure all we're properly fulfilled.
-	analyses_to_perform_set = set(analyses_to_perform)
-	if(analyses_to_perform_set != fulfilled_analyses):
-		raise Exception(f"Failed to fulfill all analyses: {list(analyses_to_perform_set-fulfilled_analyses)} (was all data loaded properly? using custom file/directory?)")
-	
-	prog_data.data_repo = data_repo
+from src.plugin_mgmt.plugins import Analysis
+from src.plugin_mgmt.pluginloader import LoadedPlugins
 
 def get_analysis_order(prog_data: ProgramData):
 	"""
 	Given the list of analyses to perform, re-order it such that analyses with dependencies are
 	  performed last.
 	"""
-	order = []
 
-	user_analysis_options = set(prog_data.args.analysis_options)
-	analysis_options = prog_data.settings["analysis_settings"]
+	loaded_plugins: LoadedPlugins = prog_data.loaded_plugins
 
-	# Only iterate n**2 times, any further iterations would mean there is an impossible/circular dependency
-	for _ in range(0, len(analysis_options.keys())**2):
-		for analysis_key in list(user_analysis_options):
-			requirements = analysis_options[analysis_key]["requires"]
-			if(all(x in order for x in requirements)):
-				order.append(analysis_key)
-				user_analysis_options.remove(analysis_key)
+	appended_metrics = []
+	  
+	# Populate additional analyses to perform from requirements
+	for to_perform in prog_data.args.analysis_options:
+		to_perform_analysis = prog_data.loaded_plugins.get_analysis_by_name(to_perform)
+		prereq_analyses = to_perform_analysis.prereq_analyses
 
-	if(len(user_analysis_options) > 0):
-		raise Exception(f"Failed to generate analysis order, could there be a circular/impossible dependency? Remaining analyses: {user_analysis_options}")
+		if(prereq_analyses is None):
+			continue
 
-	return order
+		for requirement in prereq_analyses:
+			if(requirement not in prog_data.args.analysis_options):
+				print(f"Added additional analysis \"{requirement}\" as it is a requirement of \"{to_perform}\"")
+				appended_metrics.append(requirement)
+				prog_data.args.analysis_options.append(requirement)
+
+	if(len(appended_metrics) > 0):
+		print(f"Added missing required analyses: {", ".join(appended_metrics)}")
+
+	return _topo_sort([loaded_plugins.get_analysis_by_name(analysis) for analysis in prog_data.args.analysis_options])
+
+def _topo_sort(analyses: List[Analysis]) -> List[Analysis]:
+	# Map names to Analysis objects
+	name_to_analysis: Dict[str, Analysis] = {a.name: a for a in analyses}
+
+	# Build graph (dependencies: prereq -> dependent)
+	graph = defaultdict(list)
+	indegree = {a.name: 0 for a in analyses}
+
+	for analysis in analyses:
+		if(analysis.prereq_analyses is None):
+			continue
+
+		for prereq in analysis.prereq_analyses:
+			if prereq not in name_to_analysis:
+				raise ValueError(f"Prereq '{prereq}' for {analysis.name} not found in analyses")
+			graph[prereq].append(analysis.name)
+			indegree[analysis.name] += 1
+
+	# Use min-heap for deterministic order
+	heap = [name for name, deg in indegree.items() if deg == 0]
+	heapq.heapify(heap)
+
+	sorted_order = []
+
+	while heap:
+		name = heapq.heappop(heap)
+		sorted_order.append(name_to_analysis[name])
+
+		for dep in sorted(graph[name]):  # also sort dependents for consistency
+			indegree[dep] -= 1
+			if indegree[dep] == 0:
+				heapq.heappush(heap, dep)
+
+	if len(sorted_order) != len(analyses):
+		raise ValueError("Cycle detected in prereq graph!")
+
+	return sorted_order

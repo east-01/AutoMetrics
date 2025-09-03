@@ -28,7 +28,7 @@ class VizualizationsSaver(Saver):
 
             analysis_id: AnalysisIdentifier = identifier.of
             if(not analysis_id.is_meta_analysis()):
-                src_id = analysis_id.find_source()
+                src_id = analysis_id.find_base()
 
                 metadata = data_repo.get_metadata(src_id)
                 name_prefix = f"{src_id.type}-{metadata['out_file_name']}"

@@ -36,8 +36,6 @@ def verify_arguments(prog_data):
     args = prog_data.args
 
     # Verify analysis arguments exist
-    print("TODO: arguments.py:39 verify analysis options exist from loaded plugins")
-
     if(not isinstance(args.analysis_options, list)):
         raise ArgumentException("Analysis options is not a list.")
 
@@ -51,19 +49,6 @@ def verify_arguments(prog_data):
             prog_data.loaded_plugins.get_analysis_by_name(analysis_option)
         except Exception as e:
             raise ArgumentException(f"Failed to parse analysis option list, \"{analysis_option}\" is not recognized as loaded analysis option.")
-
-    # Populate additional analyses to perform from requirements
-    for to_perform in args.analysis_options:
-        to_perform_analysis = prog_data.loaded_plugins.get_analysis_by_name(to_perform)
-        prereq_analyses = to_perform_analysis.prereq_analyses
-
-        if(prereq_analyses is None):
-            continue
-
-        for requirement in prereq_analyses:
-            if(requirement not in args.analysis_options):
-                print(f"Added additional analysis \"{requirement}\" as it is a requirement of \"{to_perform}\"")
-                args.analysis_options.append(requirement)
 
     if(args.file is not None and args.period is not None):
         # If the file exists, provide warnings about other arguments that won't be used

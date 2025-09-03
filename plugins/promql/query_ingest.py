@@ -10,7 +10,7 @@ from plugins.promql.query_executor import *
 from plugins.promql.grafana_df_analyzer import *
 from plugins.promql.query_preprocess import _preprocess_df
 from plugins.rci.rci_filters import filter_source_type
-from plugins.rci.rci_identifiers import GrafanaIdentifier, GrafanaIntermediateIdentifier
+from plugins.rci.rci_identifiers import GrafanaIdentifier
 from src.data.data_repository import DataRepository
 from src.utils.timeutils import to_unix_ts, get_range_printable
 from src.data.filters import *
@@ -25,7 +25,7 @@ def run(query_config, timeline: Timeline):
     step = query_config["step"]
     period_cnt = len(timeline.periods)
     query_count = period_cnt+len(settings["type_options"])*period_cnt
-    print(f"Loading data using ingest config \"{cfg_name}\". Will result in {query_count} query/queries.")
+    print(f"PromQL: Loading data using ingest config \"{cfg_name}\" resulting in {query_count} query/queries.")
 
     for period in timeline.periods:
 
@@ -39,6 +39,11 @@ def run(query_config, timeline: Timeline):
         status_response = perform_query(status_url) # Gets JSON response from web
         status_df_nonnumeric = transform_query_response(status_response) # Transform the JSON to a DataFrame
         status_df_raw = convert_to_numeric(status_df_nonnumeric) # Transform DF to numeric
+
+        if(len(status_df_raw) == 0):
+            print(f" Status empty.")
+            continue
+
         status_df = _preprocess_df(status_df_raw, False, step) # Preprocess DF for application
 
         for type in settings["type_options"]:
@@ -51,6 +56,11 @@ def run(query_config, timeline: Timeline):
             values_response = perform_query(values_url)
             values_df_nonnumeric = transform_query_response(values_response)
             values_df_raw = convert_to_numeric(values_df_nonnumeric)
+
+            if(len(values_df_raw) == 0):
+                print(f" {type.upper()} values empty.")
+                continue
+
             values_df = _preprocess_df(values_df_raw, True, step)
 
             print(f"\r{" "*30}\r", end="", flush=True)
