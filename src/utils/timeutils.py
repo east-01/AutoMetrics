@@ -117,8 +117,16 @@ def break_down_period(start_ts, end_ts, target_length = 60*60*24*7):
     
     periods = []
     for i in range(divisions):
-        sub_start_ts = start_ts + sub_period_length*i
-        sub_end_ts = start_ts + sub_period_length*(i+1) - 1
+        if(i == 0):
+            sub_start_ts = start_ts
+        else:
+            sub_start_ts = start_ts + sub_period_length*i
+
+        if(i == divisions-1):
+            sub_end_ts = end_ts
+        else:
+            sub_end_ts = start_ts + sub_period_length*(i+1) - 1
+
         periods.append((sub_start_ts, sub_end_ts))
 
     return periods

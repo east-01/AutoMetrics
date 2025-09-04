@@ -9,8 +9,8 @@ from plugins.promql.query_designer import *
 from plugins.promql.query_executor import *
 from plugins.promql.grafana_df_analyzer import *
 from plugins.promql.query_preprocess import _preprocess_df
-from plugins.rci.rci_filters import filter_source_type
 from plugins.rci.rci_identifiers import GrafanaIdentifier
+from plugins.rci.rci_analyses import filter_source_type
 from src.data.data_repository import DataRepository
 from src.utils.timeutils import to_unix_ts, get_range_printable
 from src.data.filters import *

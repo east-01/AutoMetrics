@@ -60,6 +60,8 @@ for plugin_type in ["ingest", "analysisdriver"]:
             print(f"Failed to verify config section for \"{plugin_type}\" plugin \"{plugin_name}\": {e}")
             continue
 
+config_section = None # Clear from above use
+
 if(successes != config_checks):
     print(f"WARNING: {successes}/{config_checks} configs valid.")
 else:
@@ -100,22 +102,26 @@ for analysis in analysis_order:
     driver = plugins.get_analysis_driver(type(analysis))
 
     try:
-        config_section = prog_data.config["analysisdriver"][plugin_name]
+        config_section = prog_data.config["analysisdriver"][type(driver).__name__]
     except KeyError as e:
         # Check if the driver can handle not having config, if so we can skip passing it
         if(driver.verify_config_section(None)):
             config_section = None
         else:
-            raise Exception(f"Analysis driver failed, it was expecting config but didn't get any.")
+            raise Exception(f"Analysis driver failed, it was expecting config but didn't get any. The driver \"{type(driver).__name__}\" is required because of analysis \"{analysis.name}\"")
 
-
-    driver.run_analysis(analysis, prog_data, config_section)
+    try:
+        driver.run_analysis(analysis, prog_data, config_section)
+    except Exception as e:
+        print(f"Analysis driver plugin \"{ingest_plugin_name}\" failed on analysis \"{analysis.name}\":")
+        traceback.print_exc()        
+        exit(2)
 
 print()
 #endregion
 
 print("TODO: Saving")
-prog_data.data_repo.print_contents()
+prog_data.data_repo.print_contents(print_dfs=True)
 
 try:
     import psutil

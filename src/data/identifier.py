@@ -64,15 +64,19 @@ class AnalysisIdentifier(Identifier):
             on = on.on
 
         return on
+    
+@dataclass(frozen=True)
+class MetaAnalysisIdentifier(AnalysisIdentifier):
+    key: str
 
-    def is_meta_analysis(self):
-        """
-        Is this analysis identifier a meta analysis?
+    def __hash__(self) -> int:
+        return hash((super().__hash__(), self.key))
 
-        Returns:
-          bool: if this analysis identifier has a root SourceIdentifier
-        """
-        return self.find_base() is None
+    def __eq__(self, other) -> bool:
+        return isinstance(other, MetaAnalysisIdentifier) and super().__eq__(other) and self.key == other.key
+
+    def __str__(self) -> str:
+        return f"{self.analysis}-{self.key}({self.on})"
 
 @dataclass(frozen=True)
 class VisIdentifier(Identifier):

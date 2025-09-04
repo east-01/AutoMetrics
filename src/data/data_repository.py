@@ -192,12 +192,12 @@ class DataRepository():
             data, metadata = other_repo.get(id_)
             self.add(id_, data, metadata)
 
-    def print_contents(self, include_metadata=False):
+    def print_contents(self, include_metadata=False, print_dfs=False):
         print("Summary of DataRepository:")
         for identifier in self.get_ids():
             data = self.get_data(identifier)
             datastr = ""
-            if(isinstance(data, pd.DataFrame)):
+            if(isinstance(data, pd.DataFrame) and not print_dfs):
                 datastr = "DataFrame"
             elif(isinstance(identifier, SummaryIdentifier)):
                 datastr = "Summary tuple"
