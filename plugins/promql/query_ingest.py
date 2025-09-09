@@ -15,7 +15,7 @@ from src.data.data_repository import DataRepository
 from src.utils.timeutils import to_unix_ts, get_range_printable
 from src.data.filters import *
 
-def run(query_config, timeline: Timeline):
+def run(query_config, period_list):
     # The data repository that holds GrafanaIdentifiers, this is different from the
     #   standard DataRepository because there are multiple queries per period and type, to be
     #   used in the processing step where we only get pending/running pods.
@@ -23,11 +23,11 @@ def run(query_config, timeline: Timeline):
 
     cfg_name = query_config["cfg_name"]
     step = query_config["step"]
-    period_cnt = len(timeline.periods)
+    period_cnt = len(period_list)
     query_count = period_cnt+len(settings["type_options"])*period_cnt
     print(f"PromQL: Loading data using ingest config \"{cfg_name}\" resulting in {query_count} query/queries.")
 
-    for period in timeline.periods:
+    for period in period_list:
 
         start_time = time.time()
 

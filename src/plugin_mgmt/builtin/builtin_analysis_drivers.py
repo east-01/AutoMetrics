@@ -55,8 +55,13 @@ class MetaAnalysisDriver(AnalysisDriverPlugin):
         if(len(unique_keys) == 0):
             raise Exception(f"Failed to run meta analysis, key method \"{key_method}\" couldn't find keys.")
 
-        timestamps = data_repo.filter_ids(filter_type(TimeStampIdentifier))
-        timestamps.sort(lambda id: id.start_ts)
+        timestamps = data_repo.filter_ids(filter_type(TimeStampIdentifier, strict=True))
+        timestamps.sort(key=lambda id: id.start_ts)
+
+        print(f"Timestamps:", timestamps)
+
+        if(len(timestamps) == 0):
+            raise Exception(f"Failed to run meta analysis, there were no Timestamps loaded. Is !!IngestTimeline!! configured?")
 
         for unique_key in unique_keys:
 
@@ -87,6 +92,10 @@ class MetaAnalysisDriver(AnalysisDriverPlugin):
 
                 for sub_analysis in sub_analyses:
                     analysis_id = resolve_analysis(start_ts, end_ts, sub_analysis)
+                    if(analysis_id is None):
+                        row.append(0)
+                        continue
+
                     analysis_result = data_repo.get_data(analysis_id)
                     
                     if(not verify_result_for_meta(analysis_result)):
@@ -103,7 +112,6 @@ class MetaAnalysisDriver(AnalysisDriverPlugin):
             }
 
             data_repo.add(out_identifier, out_df, metadata)
-            out_df=None
 
 def verify_result_for_meta(result):
     """ Verify if the object is valid to be used in a meta analysis- ensures it exists and is a single value. """

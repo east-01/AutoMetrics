@@ -42,7 +42,12 @@ prog_data = ProgramData(plugins, args, config)
 print("Verifying config sections...")
 successes = 0
 config_checks = 0
-for plugin_type in ["ingest", "analysisdriver"]:
+# Join the set of allowed types with the types in config to safely loop
+allowed_types_in_dict = {"ingest", "analysisdriver", "saver"}.intersection(set(prog_data.config.keys()))
+for plugin_type in allowed_types_in_dict:
+    if(prog_data.config[plugin_type] is None):
+        continue
+
     for plugin_name in prog_data.config[plugin_type].keys():
         try:
             plugin = prog_data.loaded_plugins.get_plugin_by_name(plugin_type, plugin_name)
@@ -66,6 +71,9 @@ if(successes != config_checks):
     print(f"WARNING: {successes}/{config_checks} configs valid.")
 else:
     print(f"All configs valid.")
+
+if(prog_data.args.verifyconfig):
+    exit()
 
 print()
 #endregion
@@ -114,14 +122,42 @@ for analysis in analysis_order:
         driver.run_analysis(analysis, prog_data, config_section)
     except Exception as e:
         print(f"Analysis driver plugin \"{ingest_plugin_name}\" failed on analysis \"{analysis.name}\":")
-        traceback.print_exc()        
+        traceback.print_exc()
         exit(2)
 
 print()
 #endregion
 
-print("TODO: Saving")
-prog_data.data_repo.print_contents(print_dfs=True)
+# print("TODO: Saving")
+prog_data.data_repo.print_contents()
+
+# from src.data.filters import filter_type
+# from plugins.rci.rci_identifiers import SummaryIdentifier
+# summaries = prog_data.data_repo.filter_ids(filter_type(SummaryIdentifier))
+# [print(prog_data.data_repo.get_data(summary)) for summary in summaries]
+
+#region Saving
+
+print("### Saving...")
+if("save-base-path" not in config):
+    base_path = "./latest_run"
+else:
+    base_path = prog_data.config["save-base-path"]    
+
+for saver_name in prog_data.config["saver"].keys():
+    saver_plugin = prog_data.loaded_plugins.get_plugin_by_name("saver", saver_name)
+
+    saver_config_section = prog_data.config["saver"][saver_name]
+    specific_base_path = base_path
+    if(saver_config_section is not None and "addtl-base" in saver_config_section):
+        specific_base_path = os.path.join(base_path, saver_config_section["addtl-base"])
+
+    try:
+        saver_plugin.save(prog_data, saver_config_section, specific_base_path)
+    except Exception as e:
+        print(f"Saver plugin \"{saver_name}\" failed! Attempting to continue saving.")
+        traceback.print_exc()        
+        continue
 
 try:
     import psutil
@@ -133,3 +169,5 @@ if(psutil_available):
     process = psutil.Process(os.getpid())
     memory_info = process.memory_info()
     print(f"\nMemory usage: {memory_info.rss / (1024 * 1024):.2f} MB")
+
+#endregion

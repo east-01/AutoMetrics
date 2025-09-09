@@ -3,7 +3,7 @@ import datetime
 
 from src.program_data.program_data import ProgramData
 from src.data.data_repository import DataRepository
-from src.data.identifiers.identifier import *
+from src.data.identifier import AnalysisIdentifier
 from src.data.filters import *
 from src.utils.timeutils import get_range_printable
 
@@ -41,7 +41,7 @@ class VisualizationVariables():
             else:
                 self.parsed_variables[variable_name] = variable_value
 
-        src_id: SourceIdentifier = identifier.find_base()
+        src_id = identifier.find_base()
         start_dt = datetime.datetime.fromtimestamp(src_id.start_ts)
 
         self.parsed_variables["MONTH"] = calendar.month_name[start_dt.month]

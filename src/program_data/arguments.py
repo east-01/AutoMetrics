@@ -29,6 +29,7 @@ def load_arguments():
 
     parser.add_argument('-v', dest='verbose', action='store_true', help="Enable verbose output.")
     parser.add_argument('-c', '--config', dest="config", type=str, help="The location of the config file to use.", default="./config.yaml")
+    parser.add_argument('--verify-config', dest="verifyconfig", action='store_true', help='Load plugins and check their configurations, early exit.')
 
     return parser.parse_args()
 

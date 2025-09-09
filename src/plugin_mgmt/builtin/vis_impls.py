@@ -3,9 +3,8 @@ import matplotlib.pyplot as plt
 import datetime
 
 from src.data.data_repository import DataRepository
-from src.data.identifiers.identifier import *
 
-def plot_simple_bargraph(data_repo: DataRepository, identifier: AnalysisIdentifier, title, subtext, color):
+def plot_simple_bargraph(data_repo: DataRepository, identifier, title, subtext, color):
     df, meta_data = data_repo.get(identifier)
 
     df = df.set_index(df.columns[0])
@@ -43,7 +42,7 @@ def plot_simple_bargraph(data_repo: DataRepository, identifier: AnalysisIdentifi
 
     return fig  # Return the figure object
             
-def plot_time_series(data_repo: DataRepository, identifier: AnalysisIdentifier, title, colors={}, default_color="blue"):
+def plot_time_series(data_repo: DataRepository, identifier, title, colors={}, default_color="blue"):
     """
     Plots a horizontal line showing the data points at each time.
     Expects a dataframe with the first column being period, each following column will be a new line
@@ -121,8 +120,5 @@ def plot_time_series(data_repo: DataRepository, identifier: AnalysisIdentifier, 
 
     # Put the x-axis on top
     ax.xaxis.tick_top()
-
-    # Add total count to the plot
-    # ax.text(0.02, -0.1, f'Total GPU hours: {total_all_namespaces}', transform=ax.transAxes, color='black', fontsize=12)
     
     return fig

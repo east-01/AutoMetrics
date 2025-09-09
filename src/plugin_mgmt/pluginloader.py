@@ -4,7 +4,7 @@ import inspect
 import sys
 from dataclasses import dataclass
 
-from src.plugin_mgmt.plugins import IngestPlugin, Analysis, AnalysisPlugin, AnalysisDriverPlugin
+from src.plugin_mgmt.plugins import IngestPlugin, Analysis, AnalysisPlugin, AnalysisDriverPlugin, Saver
 
 MODULE_DIR = "./plugins"
 
@@ -13,6 +13,7 @@ class LoadedPlugins:
     ingests: list[IngestPlugin]
     analysis_drivers: list[AnalysisDriverPlugin]
     analyses: list[Analysis]
+    savers: list[Saver]
 
     def __init__(self):
         self.load_plugins()
@@ -31,6 +32,7 @@ class LoadedPlugins:
         self.ingests = []
         self.analysis_drivers = []
         self.analyses = []
+        self.savers = []
 
         self.load_plugins_from_directory(MODULE_DIR)
         self.load_plugins_from_directory("./src/plugin_mgmt/builtin/")
@@ -93,7 +95,8 @@ class LoadedPlugins:
 
         type_to_list = {
             IngestPlugin: self.ingests,
-            AnalysisDriverPlugin: self.analysis_drivers
+            AnalysisDriverPlugin: self.analysis_drivers,
+            Saver: self.savers
         }
 
         for type in type_to_list.keys():
@@ -124,7 +127,8 @@ class LoadedPlugins:
     def get_plugin_by_name(self, plugin_type: str, name: str):
         lists = {
             "ingest": self.ingests,
-            "analysisdriver": self.analysis_drivers
+            "analysisdriver": self.analysis_drivers,
+            "saver": self.savers
         }
 
         if(plugin_type not in lists.keys()):
@@ -181,3 +185,4 @@ class LoadedPlugins:
         print(f"Loaded ingests: {", ".join([type(ingest).__name__ for ingest in self.ingests])}")
         print(f"Loaded analysis drivers: {", ".join([type(analysis_driver).__name__ for analysis_driver in self.analysis_drivers])}")
         print(f"Loaded analyses: {", ".join([analysis.name for analysis in self.analyses])}")
+        print(f"Loaded savers: {", ".join([type(saver).__name__ for saver in self.savers])}")

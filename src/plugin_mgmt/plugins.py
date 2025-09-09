@@ -46,10 +46,11 @@ class ConfigurablePlugin(ABC):
         Returns:
             None
         """
-        if(config_section is not None):
+        if(config_section is None):
+            return True
+        else:
             raise ConfigurationException(f"The configuration for {type(self).__name__} is expected to be empty.")
-        return True
-    
+
 class IngestPlugin(ConfigurablePlugin):    
     @abstractmethod
     def ingest(self, prog_data: ProgramData, config_section: dict) -> DataRepository:
@@ -75,4 +76,16 @@ class AnalysisDriverPlugin(ConfigurablePlugin):
         """
         Run this specific analysis.
         """
+        pass
+
+class Saver(ConfigurablePlugin):
+    def verify_config_section(self, config_section):
+        if(config_section is None):
+            return True
+        
+        if(len(config_section.keys()) != 1 or "addtl-base" not in config_section.keys()):
+            raise ConfigurationException(f"Default verify_config_section for Saver expects either an empty config section or a section with only \"addtl-base\"")
+
+    @abstractmethod
+    def save(self, prog_data: ProgramData, config_section: dict, base_path: str):
         pass

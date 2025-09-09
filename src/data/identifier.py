@@ -15,6 +15,9 @@ class Identifier(ABC):
     def __str__(self) -> str:
         pass
 
+    def fs_str(self) -> str:
+        return str(self).replace("/", "_")
+
 @dataclass(frozen=True)
 class TimeStampIdentifier(Identifier):
     """
@@ -51,6 +54,13 @@ class AnalysisIdentifier(Identifier):
     def __str__(self) -> str:
         return f"{self.analysis}({self.on})"
     
+    def fs_str(self):
+        base = self.find_base()
+        if(base is None):
+            return f"{self.analysis}"
+        else:
+            return f"{self.analysis}__{base.fs_str()}"
+
     def find_base(self) -> Identifier:
         """
         Find the base identifier for this analysis (follow the AnalysisIdentifier.on tree until 
@@ -77,23 +87,6 @@ class MetaAnalysisIdentifier(AnalysisIdentifier):
 
     def __str__(self) -> str:
         return f"{self.analysis}-{self.key}({self.on})"
-
-@dataclass(frozen=True)
-class VisIdentifier(Identifier):
-    """
-    An identifier for a visualization of an analysis.
-    """
-    of: Identifier
-    graph_type: str
-
-    def __hash__(self) -> int:
-        return hash(("vis", self.of, self.graph_type))
-
-    def __eq__(self, other) -> bool:
-        return isinstance(other, VisIdentifier) and self.of == other.of and self.graph_type == other.graph_type
-
-    def __str__(self) -> str:
-        return f"vis of {self.of}"
     
 @dataclass(frozen=True)
 class SummaryIdentifier(Identifier):

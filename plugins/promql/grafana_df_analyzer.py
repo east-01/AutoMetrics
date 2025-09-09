@@ -55,6 +55,8 @@ def get_resource_type(df):
         type_set.add(col_data["resource"])
 
     # If the length of the set is more than one we have an invalid DF
+    if(len(type_set) == 0):
+        raise Exception(f"Type analysis error: yielded no types. It is expected that the DataFrame has consistent resource types between all columns.")
     if(len(type_set) > 1):
         raise Exception(f"Type analysis error: yielded more than one type: {list(type_set)}. It is expected that the DataFrame has consistent resource types between all columns.")
 
