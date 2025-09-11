@@ -7,63 +7,49 @@ project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, project_root)
 
 from src.plugin_mgmt.pluginloader import LoadedPlugins
-from src.program_data.arguments import load_arguments, ArgumentException
-from src.program_data.config import load_config
+from src.program_data.parameters import load_parameters, load_arguments, load_config, ArgumentException, ConfigurationException
 from src.program_data.program_data import ProgramData
 from src.data.data_repository import DataRepository
-from src.program_data.config import ConfigurationException
-from src.analysis.analysis import get_analysis_order
+from src.analysis import get_analysis_order
 
 # Hides warnings for .fillna() calls
 pd.set_option('future.no_silent_downcasting', True)
 
 #region Initialization
 print("### Loading plugins...")
+
 plugins = LoadedPlugins()
 plugins.print_details()
 
-try:
-    args = load_arguments()
-except ArgumentException as e:
-    print(f"Invalid arguments: {e}")
-    exit()
-
-try:
-    config = load_config(args.config)
-except Exception as e:
-    print(f"Failed to load config: {e}")
-    exit()
-
+args, config = load_parameters()
 print()
-
-prog_data = ProgramData(plugins, args, config)
 
 # Verify ConfigurablePlugin config sections
 print("Verifying config sections...")
+
+prog_data = ProgramData(plugins, args, config)
+
 successes = 0
 config_checks = 0
 # Join the set of allowed types with the types in config to safely loop
-allowed_types_in_dict = {"ingest", "analysisdriver", "saver"}.intersection(set(prog_data.config.keys()))
-for plugin_type in allowed_types_in_dict:
-    if(prog_data.config[plugin_type] is None):
+for plugin_name in prog_data.loaded_plugins.loaded_plugin_names:
+    try:
+        plugin = prog_data.loaded_plugins.get_plugin_by_name(plugin_name)
+    except Exception as e:
+        print(e)
         continue
-
-    for plugin_name in prog_data.config[plugin_type].keys():
-        try:
-            plugin = prog_data.loaded_plugins.get_plugin_by_name(plugin_type, plugin_name)
-        except Exception as e:
-            print(e)
-            continue
-
-        config_section = prog_data.config[plugin_type][plugin_name]
-        
-        config_checks += 1
-        try:
-            plugin.verify_config_section(config_section)
-            successes += 1
-        except ConfigurationException as e:
-            print(f"Failed to verify config section for \"{plugin_type}\" plugin \"{plugin_name}\": {e}")
-            continue
+    
+    config_section = None
+    if(plugin_name in prog_data.config.keys()):
+        config_section = prog_data.config[plugin_name]
+    
+    config_checks += 1
+    try:
+        plugin.verify_config_section(config_section)
+        successes += 1
+    except ConfigurationException as e:
+        print(f"Failed to verify config section for plugin \"{plugin_name}\": {e}")
+        continue
 
 config_section = None # Clear from above use
 
@@ -82,11 +68,16 @@ print()
 print("### Ingesting data...")
 prog_data.data_repo = DataRepository()
 
-for ingest_plugin_name in prog_data.config["ingest"].keys():
-    # We can safely do this, this is checked above when verifying ConfigurablePlugins
-    ingest_plugin = prog_data.loaded_plugins.get_plugin_by_name("ingest", ingest_plugin_name)
+for ingest_plugin_name in prog_data.config["ingest"]["run"]:
+    try:
+        ingest_plugin = prog_data.loaded_plugins.get_plugin_by_name(ingest_plugin_name)
+    except Exception as e:
+        print(f"Failed to run ingest plugin named \"{ingest_plugin_name}\". {e}")
+        continue
 
-    ingest_config_section = prog_data.config["ingest"][ingest_plugin_name]
+    ingest_config_section = None
+    if(ingest_plugin_name in prog_data.config.keys()):
+        ingest_config_section = prog_data.config[ingest_plugin_name]
 
     try:
         ingested_repo = ingest_plugin.ingest(prog_data, ingest_config_section)
@@ -96,21 +87,21 @@ for ingest_plugin_name in prog_data.config["ingest"].keys():
         traceback.print_exc()        
         exit(2)
 
-# prog_data.data_repo.print_contents()
 print()
 #endregion
 
 #region Analysis
 print("### Analyzing...")
 analysis_order = get_analysis_order(prog_data)
-analysis_order_printable = ", ".join([analysis.name for analysis in analysis_order])
 
-print(f"Will perform analyses: {analysis_order_printable}")
+analysis_order_printable = ", ".join([analysis.name for analysis in analysis_order])
+print(f"Analysis order: {analysis_order_printable}")
+
 for analysis in analysis_order:
     driver = plugins.get_analysis_driver(type(analysis))
 
     try:
-        config_section = prog_data.config["analysisdriver"][type(driver).__name__]
+        config_section = prog_data.config[type(driver).__name__]
     except KeyError as e:
         # Check if the driver can handle not having config, if so we can skip passing it
         if(driver.verify_config_section(None)):
@@ -128,26 +119,25 @@ for analysis in analysis_order:
 print()
 #endregion
 
-# print("TODO: Saving")
-prog_data.data_repo.print_contents()
-
-# from src.data.filters import filter_type
-# from plugins.rci.rci_identifiers import SummaryIdentifier
-# summaries = prog_data.data_repo.filter_ids(filter_type(SummaryIdentifier))
-# [print(prog_data.data_repo.get_data(summary)) for summary in summaries]
-
 #region Saving
-
 print("### Saving...")
-if("save-base-path" not in config):
-    base_path = "./latest_run"
+base_path = "./latest_run"
+if("saving" in prog_data.config.keys() and "base-path" in prog_data.config["saving"].keys()):
+    base_path = prog_data.config["saving"]["base-path"]
 else:
-    base_path = prog_data.config["save-base-path"]    
+    print(f"WARNING: Using default base path \"{base_path}\" for saving.")
 
-for saver_name in prog_data.config["saver"].keys():
-    saver_plugin = prog_data.loaded_plugins.get_plugin_by_name("saver", saver_name)
+for saver_name in prog_data.config["saving"]["run"]:
+    try:
+        saver_plugin = prog_data.loaded_plugins.get_plugin_by_name(saver_name)
+    except Exception as e:
+        print(f"Failed to run saver plugin named \"{saver_name}\". {e}")
+        continue
 
-    saver_config_section = prog_data.config["saver"][saver_name]
+    saver_config_section = None
+    if(saver_name in prog_data.config.keys()):
+        saver_config_section = prog_data.config[saver_name]
+    
     specific_base_path = base_path
     if(saver_config_section is not None and "addtl-base" in saver_config_section):
         specific_base_path = os.path.join(base_path, saver_config_section["addtl-base"])
@@ -159,6 +149,9 @@ for saver_name in prog_data.config["saver"].keys():
         traceback.print_exc()        
         continue
 
+print()
+#endregion
+
 try:
     import psutil
     psutil_available = True
@@ -168,6 +161,4 @@ except ImportError:
 if(psutil_available):
     process = psutil.Process(os.getpid())
     memory_info = process.memory_info()
-    print(f"\nMemory usage: {memory_info.rss / (1024 * 1024):.2f} MB")
-
-#endregion
+    print(f"Memory usage: {memory_info.rss / (1024 * 1024):.2f} MB")

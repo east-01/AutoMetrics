@@ -4,7 +4,7 @@ from matplotlib.figure import Figure
 from src.program_data.program_data import ProgramData
 from src.data.data_repository import DataRepository
 from src.data.filters import *
-from src.plugin_mgmt.builtin.visualizations import VisIdentifier
+from plugins_builtin.vis_analysis_driver import VisIdentifier
 from src.plugin_mgmt.plugins import Saver
 
 class VizualizationsSaver(Saver):        

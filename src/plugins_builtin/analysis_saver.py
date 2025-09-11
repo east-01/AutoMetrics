@@ -7,7 +7,7 @@ from src.data.filters import *
 from src.plugin_mgmt.plugins import Saver
 from src.utils.fileutils import append_line_to_file
 from src.utils.timeutils import get_range_printable
-from src.program_data.config import ConfigurationException
+from src.program_data.parameter_utils import ConfigurationException
 
 class AnalysisSaver(Saver):
     def verify_config_section(self, config_section):

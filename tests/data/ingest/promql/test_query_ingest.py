@@ -4,7 +4,7 @@ import json
 import pandas as pd
 
 from src.data.ingest.promql.query_ingest import _filter_cols_zero, _merge_columns_on_uid, _infer_times, _preprocess_df, _apply_status_df, _filter_to_running_pending
-from plugins.promql.grafana_df_analyzer import convert_to_numeric
+from plugins.rci.promql.grafana_df_analyzer import convert_to_numeric
 from src.data.data_repository import DataRepository
 from src.data.identifiers.identifier import *
 from src.data.filters import *

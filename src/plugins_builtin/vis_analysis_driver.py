@@ -1,21 +1,14 @@
-import calendar
-from typing import Callable
-import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
-from matplotlib.lines import Line2D
 import pandas as pd
-import numpy as np
-import datetime
+from typing import Callable
 
-from plugin_mgmt.builtin.vis_impls import plot_simple_bargraph, plot_time_series
-from plugin_mgmt.builtin.vis_variables import VisualizationVariables
-from src.program_data.program_data import ProgramData
 from src.data.data_repository import DataRepository
-from src.utils.timeutils import get_range_as_month
 from src.data.filters import *
-from src.plugin_mgmt.plugins import AnalysisDriverPlugin
-from src.plugin_mgmt.plugins import Analysis
-import src.plugin_mgmt.builtin.visualizations as pkg
+from src.plugin_mgmt.plugins import Analysis, AnalysisDriverPlugin
+from src.plugins_builtin.vis_impls import plot_simple_bargraph, plot_time_series
+from src.plugins_builtin.vis_variables import VisualizationVariables
+
+import src.plugins_builtin.vis_analysis_driver as pkg
 
 @dataclass(frozen=True)
 class VisIdentifier(Identifier):
@@ -59,10 +52,8 @@ class VisualAnalysis(Analysis):
 class VisualAnalysisDriver(AnalysisDriverPlugin):
     SERVED_TYPE=pkg.VisualAnalysis
 
-    def run_analysis(self, analysis: VisualAnalysis, prog_data, config_section: dict):
+    def run_analysis(self, analysis: pkg.VisualAnalysis, prog_data, config_section: dict):
         vis_settings = analysis.vis_settings
-
-        print(f"RUNNING VISS")
 
         data_repo: DataRepository = prog_data.data_repo
         identifiers = data_repo.filter_ids(analysis.filter)
@@ -98,7 +89,5 @@ class VisualAnalysisDriver(AnalysisDriverPlugin):
             # Create vis identifier and add to repo
             vis_identifier = pkg.VisIdentifier(identifier, type(VisSettings).__name__)
             data_repo.add(vis_identifier, fig)
-
-            print(f"Adding: {vis_identifier}")
 
             plt.close(fig)

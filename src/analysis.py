@@ -26,7 +26,8 @@ def get_analysis_order(prog_data: ProgramData):
 
 		for requirement in prereq_analyses:
 			if(requirement not in prog_data.args.analysis_options):
-				print(f"Added additional analysis \"{requirement}\" as it is a requirement of \"{to_perform}\"")
+				if(prog_data.args.verbose):
+					print(f"Added additional analysis \"{requirement}\" as it is a requirement of \"{to_perform}\"")
 				appended_metrics.append(requirement)
 				prog_data.args.analysis_options.append(requirement)
 

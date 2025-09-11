@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
+from src.utils.timeutils import get_range_printable
+
 @dataclass(frozen=True)
 class Identifier(ABC):
     @abstractmethod
@@ -87,21 +89,3 @@ class MetaAnalysisIdentifier(AnalysisIdentifier):
 
     def __str__(self) -> str:
         return f"{self.analysis}-{self.key}({self.on})"
-    
-@dataclass(frozen=True)
-class SummaryIdentifier(Identifier):
-    """
-    An identifier for a summary of a period, the start_ts and end_ts will match the corresponding
-      SourceIdentifiers' start_ts and end_ts.
-    """
-    start_ts: int
-    end_ts: int
-
-    def __hash__(self) -> int:
-        return hash((self.start_ts, self.end_ts))
-
-    def __eq__(self, other) -> bool:
-        return isinstance(other, SummaryIdentifier) and self.start_ts == other.start_ts and self.end_ts == other.end_ts
-
-    def __str__(self) -> str:
-        return f"summary of {self.start_ts}-{self.end_ts}"

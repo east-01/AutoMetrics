@@ -5,13 +5,12 @@ from typing import Callable, Type
 from src.program_data.program_data import ProgramData
 from src.data.data_repository import DataRepository
 from src.data.identifier import Identifier
-from src.program_data.config import ConfigurationException
+from src.program_data.parameter_utils import ConfigurationException
 
 @dataclass(frozen=True)
 class Analysis(ABC):
     name: str
     prereq_analyses: list[str]
-    vis_options: dict
 
 class AnalysisPlugin(ABC):
     """

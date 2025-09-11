@@ -1,42 +1,34 @@
+from dataclasses import dataclass
+from typing import Callable
 import pandas as pd
 import numpy as np
 
-from src.data.identifier import AnalysisIdentifier, MetaAnalysisIdentifier
+from src.data.identifier import MetaAnalysisIdentifier
 from src.data.data_repository import DataRepository
-from src.plugin_mgmt.plugins import AnalysisDriverPlugin
-from src.plugin_mgmt.builtin.builtin_analyses import SimpleAnalysis, MetaAnalysis, VerificationAnalysis
+from src.plugin_mgmt.plugins import Analysis, AnalysisDriverPlugin
 from src.data.filters import filter_analyis_type
 from src.utils.timeutils import get_range_printable
 from src.data.filters import filter_type
-from src.data.identifier import TimeStampIdentifier
+from src.data.identifier import Identifier, TimeStampIdentifier
 
-class SimpleAnalysisDriver(AnalysisDriverPlugin):
-    SERVED_TYPE = SimpleAnalysis
+import src.plugins_builtin.meta_analysis_driver as pkg
 
-    def run_analysis(self, analysis: SimpleAnalysis, prog_data, config_section: dict):
-        data_repo: DataRepository = prog_data.data_repo
-
-        # Get filter and apply to data_repo, the filter finds the Identifiers that the analysis
-        #   will use in its calculation.
-        analysis_filter = analysis.filter
-        identifiers = data_repo.filter_ids(analysis_filter)
-
-        # If the length of the target identifiers is zero then we can't perform and fulfill 
-        #   the analysis.
-        if(len(identifiers) == 0):
-            return
-
-        for identifier in identifiers:
-            analysis_result = analysis.method(identifier, data_repo)
-
-            # Generate identifier and add to repository.
-            analysis_identifier = AnalysisIdentifier(identifier, analysis.name)
-            data_repo.add(analysis_identifier, analysis_result)
+@dataclass(frozen=True)
+class MetaAnalysis(Analysis):
+    """
+    A MetaAnalysis takes results for each of the analyses specified in the list from each time
+        period, creating a table of results over time.
+    """
+    key_method: Callable[[Identifier], str]
+    """
+    The key_method is a callable that takes the identifier and returns some key value from it, this
+        key value is used to perform meta analyses on only the identifiers that have matching keys.
+    """
 
 class MetaAnalysisDriver(AnalysisDriverPlugin):
-    SERVED_TYPE = MetaAnalysis
+    SERVED_TYPE = pkg.MetaAnalysis
 
-    def run_analysis(self, analysis: MetaAnalysis, prog_data, config_section: dict) -> DataRepository:
+    def run_analysis(self, analysis: pkg.MetaAnalysis, prog_data, config_section: dict) -> DataRepository:
         """
         A meta analysis takes in a list of analysis names and creates a table with columns:
         Period, analysis1, analysis2, ...
@@ -57,8 +49,6 @@ class MetaAnalysisDriver(AnalysisDriverPlugin):
 
         timestamps = data_repo.filter_ids(filter_type(TimeStampIdentifier, strict=True))
         timestamps.sort(key=lambda id: id.start_ts)
-
-        print(f"Timestamps:", timestamps)
 
         if(len(timestamps) == 0):
             raise Exception(f"Failed to run meta analysis, there were no Timestamps loaded. Is !!IngestTimeline!! configured?")
@@ -143,28 +133,3 @@ def get_unique_keys(data_repo: DataRepository, analysis_name: str, key_method):
 
     identifiers = data_repo.filter_ids(filter_analyis_type(analysis_name))
     return set([key_method(id) for id in identifiers])
-
-class VerificationException(Exception):
-    pass
-
-class VerificationDriver(AnalysisDriverPlugin):
-    """
-    The VerificationDriver runs VerificationAnalyses where the analysis data is checked. Results
-        from these runs do not get put into the DataRepository, only exceptions are thrown when
-        data is invalid.
-    """
-    SERVED_TYPE = VerificationAnalysis
-
-    def run_analysis(self, analysis: VerificationAnalysis, prog_data, config_section: dict):
-        data_repo: DataRepository = prog_data.data_repo
-
-        identifiers = data_repo.filter_ids(filter_analyis_type(analysis.targ_analysis))
-
-        # If the length of the target identifiers is zero then we can't perform and fulfill 
-        #   the analysis.
-        if(len(identifiers) == 0):
-            return
-
-        for identifier in identifiers:
-            if(not analysis.method(identifier, data_repo)):
-                raise VerificationException(f"Failed to verify analysis \"{analysis.name}\" for identifier {identifier}")

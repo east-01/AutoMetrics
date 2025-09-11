@@ -17,7 +17,7 @@ class LoadedPlugins:
 
     def __init__(self):
         self.load_plugins()
-        self.cache_plugins()
+        self.loaded_plugin_names = [type(plugin).__name__ for plugin in self.ingests+self.analysis_drivers+self.savers]
 
 #region Loading
     def load_plugins(self):
@@ -35,7 +35,7 @@ class LoadedPlugins:
         self.savers = []
 
         self.load_plugins_from_directory(MODULE_DIR)
-        self.load_plugins_from_directory("./src/plugin_mgmt/builtin/")
+        self.load_plugins_from_directory("./src/plugins_builtin/")
 
     def load_plugins_from_directory(self, directory):
         for root, dirs, files in os.walk(directory):
@@ -55,13 +55,6 @@ class LoadedPlugins:
 
         Returns: None
         """
-
-        # module_name = os.path.splitext(os.path.relpath(path, MODULE_DIR))[0].replace(os.sep, "_")
-
-        # spec = importlib.util.spec_from_file_location(module_name, path)
-        # module = importlib.util.module_from_spec(spec)
-        # # module = importlib.import_module(module_name)
-        # spec.loader.exec_module(module)
 
         module_name = os.path.splitext(os.path.relpath(path, MODULE_DIR))[0].replace(os.sep, "_")
         if module_name in sys.modules:
@@ -115,21 +108,29 @@ class LoadedPlugins:
                     continue
 
                 self.analyses.append(analysis)
-
-    def cache_plugins(self):
-        """
-        Caches various aspects about loaded plugins. Like storing analyses by name, 
-        """
-        pass
 #endregion
 
 #region Getters
-    def get_plugin_by_name(self, plugin_type: str, name: str):
-        lists = {
+    def get_plugin_lists(self):
+        return {
             "ingest": self.ingests,
             "analysisdriver": self.analysis_drivers,
             "saver": self.savers
         }
+
+    def get_plugin_by_name(self, name: str):
+        lists = self.get_plugin_lists()
+        for plugin_type in lists.keys():
+            try:
+                return self.get_plugin_by_name_type(plugin_type, name)
+            except:
+                continue
+        
+        raise Exception(f"Failed to get plugin by name \"{name}\"")
+
+
+    def get_plugin_by_name_type(self, plugin_type: str, name: str):
+        lists = self.get_plugin_lists()
 
         if(plugin_type not in lists.keys()):
             raise Exception(f"Plugin type \"{plugin_type}\" not recognized. Supported values are: {", ".join(lists.keys())}")
@@ -182,7 +183,21 @@ class LoadedPlugins:
         """
         Prints details to the console
         """
-        print(f"Loaded ingests: {", ".join([type(ingest).__name__ for ingest in self.ingests])}")
-        print(f"Loaded analysis drivers: {", ".join([type(analysis_driver).__name__ for analysis_driver in self.analysis_drivers])}")
-        print(f"Loaded analyses: {", ".join([analysis.name for analysis in self.analyses])}")
-        print(f"Loaded savers: {", ".join([type(saver).__name__ for saver in self.savers])}")
+        def print_detail_section(sec_name, sec_name_plural, sec_list, stringify_operation=lambda key: type(key).__name__):
+            print_name = sec_name
+            if(len(sec_list) != 1):
+                print_name = sec_name_plural
+
+            out_str = f"Loaded {len(sec_list)} {print_name}"
+            if(len(sec_list) == 0):
+                out_str += "."
+            else:
+                print_list = ", ".join([stringify_operation(list_item) for list_item in sec_list])
+                out_str += f": {print_list}"
+
+            print(out_str)
+
+        print_detail_section("ingest", "ingests", self.ingests)
+        print_detail_section("analysis driver", "analysis drivers", self.analysis_drivers)
+        print_detail_section("analysis", "analyses", self.analyses, lambda key: key.name)
+        print_detail_section("saver", "savers", self.savers)

@@ -4,7 +4,7 @@ import os
 import pandas as pd
 
 from src.program_data.program_data import ProgramData
-from src.program_data.arguments import parse_file_list
+from program_data.parameters import parse_file_list
 
 @pytest.fixture
 def program_data_def_config(default_config):

@@ -3,8 +3,8 @@
 import pandas as pd
 
 # from src.program_data.settings import settings
-from src.program_data.arguments import load_arguments, verify_arguments, ArgumentException
-from src.program_data.config import load_config, verify_config, ConfigurationException
+from program_data.parameters import load_arguments, verify_arguments, ArgumentException
+from src.program_data.parameters import load_config, verify_config, ConfigurationException
 from src.data.data_repository import DataRepository
 from src.data.timeline import Timeline
 

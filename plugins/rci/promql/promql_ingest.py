@@ -6,9 +6,9 @@ import json
 from src.data.data_repository import DataRepository
 from src.plugin_mgmt.plugins import IngestPlugin
 from src.program_data.program_data import ProgramData
-from src.program_data.config import ConfigurationException
+from src.program_data.parameter_utils import ConfigurationException
 
-from plugins.promql.query_ingest import run
+from plugins.rci.promql.query_ingest import run
 
 class PromQLIngestController(IngestPlugin):
     def verify_config_section(self, config_section) -> bool:
