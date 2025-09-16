@@ -1,15 +1,20 @@
 import os
 import pandas as pd
 
-from src.program_data.program_data import ProgramData
 from src.data.data_repository import DataRepository
 from src.data.filters import *
+from src.parameter_utils import ConfigurationException
 from src.plugin_mgmt.plugins import Saver
+from src.program_data import ProgramData
 from src.utils.fileutils import append_line_to_file
 from src.utils.timeutils import get_range_printable
-from src.program_data.parameter_utils import ConfigurationException
 
 class AnalysisSaver(Saver):
+    """ The AnalysisSaver will attempt to cover all AnalysisIdentifiers and their extensions. It
+            can save standard AnalysisIdentifiers and MetaAnalysisIdentifiers. There are two types
+            of result: text result and dataframe; text results will be put into a single .txt file
+            while dataframes will be saved as .csvs """
+
     def verify_config_section(self, config_section):
         if(config_section is None):
             return True
@@ -37,13 +42,20 @@ class AnalysisSaver(Saver):
         self.text_results = {}
 
         identifiers = []
+        # Handle if there is a whitelist in the config section
         if(config_section is not None and "whitelist" in config_section):
+            # If there is a whitelist, filter by the analysis type of the whitelisted analysis and
+            #   extend identifiers untill all whitelisted analyses are consumed.
             for whitelisted_analysis in config_section["whitelist"]:
                 addtl_identifiers = data_repo.filter_ids(filter_analyis_type(whitelisted_analysis))
                 identifiers.extend(addtl_identifiers)
         else:
+            # If no whitelist, we'll just get all of the AnalysisIdentifiers
             identifiers = data_repo.filter_ids(filter_type(AnalysisIdentifier))
 
+        all_saved_files = []
+
+        # Loop through each result given by identifiers saving it by its type
         for identifier in identifiers:
             identifier: AnalysisIdentifier = identifier
 
@@ -54,9 +66,11 @@ class AnalysisSaver(Saver):
                 return
 
             if(isinstance(identifier, MetaAnalysisIdentifier)):
-                self.save_meta_analysis(identifier)
+                saved_files = self.save_meta_analysis(identifier)
             else:
-                self.save_analysis(identifier)
+                saved_files = self.save_analysis(identifier)
+
+            all_saved_files.extend(saved_files)
 
         # Save text results, order keys by start time
         ordered_keys = sorted(self.text_results.keys(), key=lambda x: x.start_ts)
@@ -69,6 +83,10 @@ class AnalysisSaver(Saver):
 
                 append_line_to_file(path, to_append, path not in self.has_written)
                 self.has_written.add(path)
+
+        all_saved_files.append(self.has_written)
+
+        return all_saved_files
 
     def save_analysis(self, identifier: AnalysisIdentifier):
 
@@ -92,8 +110,10 @@ class AnalysisSaver(Saver):
             path = os.path.join(analysis_dir_path, f"{identifier.analysis}.csv")
             print(f"  Saving analysis file \"{path}\"")
             result.to_csv(path, index=False)
+            return [path]
         else:
             self.text_results[src_id].append(f"{identifier.analysis}: {str(result)}")
+            return []
 
     def save_meta_analysis(self, identifier):
         data_repo: DataRepository = self.prog_data.data_repo
@@ -111,6 +131,7 @@ class AnalysisSaver(Saver):
         path = os.path.join(analysis_dir_path, f"{identifier.analysis}.csv")
         print(f"  Saving analysis file \"{path}\"")
         result.to_csv(path, index=False)
+        return [path]
                 
             
             

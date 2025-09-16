@@ -2,7 +2,7 @@ from collections import defaultdict
 import heapq
 from typing import Dict, List
 
-from src.program_data.program_data import ProgramData
+from src.program_data import ProgramData
 from src.plugin_mgmt.plugins import Analysis
 from src.plugin_mgmt.pluginloader import LoadedPlugins
 

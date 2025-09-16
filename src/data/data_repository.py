@@ -1,7 +1,7 @@
 import pandas as pd
 
-from src.data.identifier import Identifier
 from src.data.filters import *
+from src.data.identifier import Identifier
 
 class DataRepository():
     """
@@ -199,8 +199,6 @@ class DataRepository():
             datastr = ""
             if(isinstance(data, pd.DataFrame) and not print_dfs):
                 datastr = "DataFrame"
-            elif(isinstance(identifier, SummaryIdentifier)):
-                datastr = "Summary tuple"
             else:
                 datastr = str(data)
 

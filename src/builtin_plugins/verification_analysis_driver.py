@@ -1,19 +1,20 @@
 from dataclasses import dataclass
 from typing import Callable
 
-from src.data.identifier import Identifier
-from src.plugin_mgmt.plugins import Analysis
 from src.data.data_repository import DataRepository
-from src.plugin_mgmt.plugins import AnalysisDriverPlugin
 from src.data.filters import filter_analyis_type
+from src.data.identifier import Identifier
+from src.plugin_mgmt.plugins import Analysis, AnalysisDriverPlugin
 
-import src.plugins_builtin.verification_analysis_driver as pkg
+import src.builtin_plugins.verification_analysis_driver as pkg
 
 @dataclass(frozen=True)
 class VerificationAnalysis(Analysis):
     """
-    The VerificationAnalysis exists to check other Analysis results, one application for this is
-        checking if the amount of hours calculated > amount of hours in time frame.
+    The VerificationAnalysis exists to check other Analysis results. It has a similar structure to
+        the SimpleAnalysis by filtering by analysis name and then having a verification method.
+    One application for this is checking if the amount of hours calculated > amount of hours in 
+        time frame.
     """
     targ_analysis: str
     method: Callable[[Identifier, DataRepository], bool]
@@ -30,6 +31,9 @@ class VerificationDriver(AnalysisDriverPlugin):
     SERVED_TYPE = pkg.VerificationAnalysis
 
     def run_analysis(self, analysis: pkg.VerificationAnalysis, prog_data, config_section: dict):
+        """ The SimpleAnalysisDriver will poll the DataRepository for AnalysisIdentifiers with the 
+                same name as targ_analysis, then run the verification method on it.
+        """
         data_repo: DataRepository = prog_data.data_repo
 
         identifiers = data_repo.filter_ids(filter_analyis_type(analysis.targ_analysis))

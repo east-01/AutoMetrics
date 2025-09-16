@@ -3,15 +3,13 @@ from typing import Callable
 import pandas as pd
 import numpy as np
 
-from src.data.identifier import MetaAnalysisIdentifier
 from src.data.data_repository import DataRepository
+from src.data.filters import filter_type, filter_analyis_type
+from src.data.identifier import Identifier, MetaAnalysisIdentifier, TimeStampIdentifier
 from src.plugin_mgmt.plugins import Analysis, AnalysisDriverPlugin
-from src.data.filters import filter_analyis_type
 from src.utils.timeutils import get_range_printable
-from src.data.filters import filter_type
-from src.data.identifier import Identifier, TimeStampIdentifier
 
-import src.plugins_builtin.meta_analysis_driver as pkg
+import src.builtin_plugins.meta_analysis_driver as pkg
 
 @dataclass(frozen=True)
 class MetaAnalysis(Analysis):

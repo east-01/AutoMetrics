@@ -1,11 +1,10 @@
 import calendar
 import datetime
 
-from src.program_data.program_data import ProgramData
 from src.data.data_repository import DataRepository
-from src.data.identifier import AnalysisIdentifier
 from src.data.filters import *
-from src.utils.timeutils import get_range_printable
+from src.data.identifier import AnalysisIdentifier
+from src.program_data import ProgramData
 
 class VisualizationVariables():
     """

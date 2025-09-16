@@ -1,58 +1,25 @@
 import matplotlib.pyplot as plt
 import pandas as pd
-from typing import Callable
 
+from src.builtin_plugins.vis_dataclasses import VisIdentifier, VisualAnalysis, VisSettings, VisBarSettings, VisTimeSettings
+from src.builtin_plugins.vis_impls import plot_simple_bargraph, plot_time_series
+from src.builtin_plugins.vis_variables import VisualizationVariables
 from src.data.data_repository import DataRepository
 from src.data.filters import *
-from src.plugin_mgmt.plugins import Analysis, AnalysisDriverPlugin
-from src.plugins_builtin.vis_impls import plot_simple_bargraph, plot_time_series
-from src.plugins_builtin.vis_variables import VisualizationVariables
-
-import src.plugins_builtin.vis_analysis_driver as pkg
-
-@dataclass(frozen=True)
-class VisIdentifier(Identifier):
-    """
-    An identifier for a visualization of an analysis.
-    """
-    of: Identifier
-    graph_type: str
-
-    def __hash__(self) -> int:
-        return hash(("vis", self.of, self.graph_type))
-
-    def __eq__(self, other) -> bool:
-        return isinstance(other, VisIdentifier) and self.of == other.of and self.graph_type == other.graph_type
-
-    def __str__(self) -> str:
-        return f"vis of {self.of}"
-    
-@dataclass(frozen=True)
-class VisSettings():
-    title: str
-    variables: dict
-
-@dataclass(frozen=True)
-class VisBarSettings(VisSettings):
-    subtext: str
-    color: object
-
-@dataclass(frozen=True)
-class VisTimeSettings(VisSettings):
-    color: dict
-
-@dataclass(frozen=True)
-class VisualAnalysis(Analysis):
-    """
-    The VisualAnalysis facilitates the generation of visualizations.
-    """
-    filter: Callable[[Identifier], bool]
-    vis_settings: VisSettings
+from src.plugin_mgmt.plugins import AnalysisDriverPlugin
 
 class VisualAnalysisDriver(AnalysisDriverPlugin):
-    SERVED_TYPE=pkg.VisualAnalysis
+    """ The VisualAnalysisDriver will perform VisualAnalyses, taking in the VisSettings and
+            applying them to the provided analysis. Visualized plots are stored with VisIdentifiers
+            in the DataRepository.
+    """
+    SERVED_TYPE=VisualAnalysis
 
-    def run_analysis(self, analysis: pkg.VisualAnalysis, prog_data, config_section: dict):
+    def run_analysis(self, analysis: VisualAnalysis, prog_data, config_section: dict):
+        """ Loop through the identifiers returned by the VisualAnalysis' filter, performing the
+                corresponding visualization specified by the VisualAnalysis. Store each plot with a
+                VisIdentifier.
+        """
         vis_settings = analysis.vis_settings
 
         data_repo: DataRepository = prog_data.data_repo
@@ -79,15 +46,15 @@ class VisualAnalysisDriver(AnalysisDriverPlugin):
 
             # Plot figure based off visualization type
             fig = None
-            if(isinstance(vis_settings, pkg.VisBarSettings)):
+            if(isinstance(vis_settings, VisBarSettings)):
                 fig = plot_simple_bargraph(data_repo, identifier, vis_title, vis_subtext, vis_color)
-            elif(isinstance(vis_settings, pkg.VisTimeSettings)):
+            elif(isinstance(vis_settings, VisTimeSettings)):
                 fig = plot_time_series(data_repo, identifier, vis_title, vis_color)
             else:
                 raise Exception(f"Don't know how to handle visualization type \"{type(vis_settings)}\"")
 
             # Create vis identifier and add to repo
-            vis_identifier = pkg.VisIdentifier(identifier, type(VisSettings).__name__)
+            vis_identifier = VisIdentifier(identifier, type(VisSettings).__name__)
             data_repo.add(vis_identifier, fig)
 
             plt.close(fig)

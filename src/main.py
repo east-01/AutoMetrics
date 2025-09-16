@@ -1,4 +1,5 @@
 import os
+import subprocess
 import sys
 import pandas as pd
 import traceback
@@ -7,8 +8,8 @@ project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, project_root)
 
 from src.plugin_mgmt.pluginloader import LoadedPlugins
-from src.program_data.parameters import load_parameters, load_arguments, load_config, ArgumentException, ConfigurationException
-from src.program_data.program_data import ProgramData
+from src.parameters import load_parameters, ConfigurationException
+from src.program_data import ProgramData
 from src.data.data_repository import DataRepository
 from src.analysis import get_analysis_order
 
@@ -127,6 +128,7 @@ if("saving" in prog_data.config.keys() and "base-path" in prog_data.config["savi
 else:
     print(f"WARNING: Using default base path \"{base_path}\" for saving.")
 
+all_saved_files = []
 for saver_name in prog_data.config["saving"]["run"]:
     try:
         saver_plugin = prog_data.loaded_plugins.get_plugin_by_name(saver_name)
@@ -143,14 +145,29 @@ for saver_name in prog_data.config["saving"]["run"]:
         specific_base_path = os.path.join(base_path, saver_config_section["addtl-base"])
 
     try:
-        saver_plugin.save(prog_data, saver_config_section, specific_base_path)
+        saved_files = saver_plugin.save(prog_data, saver_config_section, specific_base_path)
+        all_saved_files.extend(saved_files)
     except Exception as e:
-        print(f"Saver plugin \"{saver_name}\" failed! Attempting to continue saving.")
+        print(f"Saver plugin \"{saver_name}\" failed:")
         traceback.print_exc()        
+        print("Continuing saving...")
         continue
 
 print()
 #endregion
+
+def open_file(path: str):
+    if sys.platform.startswith("darwin"):  # macOS
+        subprocess.run(["open", path])
+    elif os.name == "nt":  # Windows
+        os.startfile(path)  # type: ignore[attr-defined]
+    elif os.name == "posix":  # Linux / Unix
+        subprocess.run(["xdg-open", path])
+    else:
+        raise OSError(f"Unsupported platform: {sys.platform}")
+    
+for saved_file in all_saved_files:
+    open_file(saved_file)
 
 try:
     import psutil

@@ -2,31 +2,10 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Callable, Type
 
-from src.program_data.program_data import ProgramData
+from src.program_data import ProgramData
 from src.data.data_repository import DataRepository
 from src.data.identifier import Identifier
-from src.program_data.parameter_utils import ConfigurationException
-
-@dataclass(frozen=True)
-class Analysis(ABC):
-    name: str
-    prereq_analyses: list[str]
-
-class AnalysisPlugin(ABC):
-    """
-    The AnalysisPlugin acts as a container for analyses that are going to be added. It's main
-        purpose is to supply this list of analyses.
-    """
-
-    @abstractmethod
-    def get_analyses(self) -> list[Analysis]:
-        """
-        Get the list of Analysis objects from this plugin.
-
-        Returns:
-            list[Analysis]: The list of analyses.
-        """
-        pass
+from src.parameter_utils import ConfigurationException
 
 class ConfigurablePlugin(ABC):
     """
@@ -60,6 +39,27 @@ class IngestPlugin(ConfigurablePlugin):
             DataRepository: The ingested information.
         """
         pass
+    
+@dataclass(frozen=True)
+class Analysis(ABC):
+    name: str
+    prereq_analyses: list[str]
+
+class AnalysisPlugin(ABC):
+    """
+    The AnalysisPlugin acts as a container for analyses that are going to be added. It's main
+        purpose is to supply this list of analyses.
+    """
+
+    @abstractmethod
+    def get_analyses(self) -> list[Analysis]:
+        """
+        Get the list of Analysis objects from this plugin.
+
+        Returns:
+            list[Analysis]: The list of analyses.
+        """
+        pass
 
 class AnalysisDriverPlugin(ConfigurablePlugin):
     """
@@ -72,13 +72,17 @@ class AnalysisDriverPlugin(ConfigurablePlugin):
 
     @abstractmethod
     def run_analysis(self, analysis, prog_data: ProgramData, config_section: dict):
-        """
-        Run this specific analysis.
-        """
+        """ Run this specific analysis. """
         pass
 
 class Saver(ConfigurablePlugin):
+    """ The Saver plugin saves data from the DataRepository to the file system. The saver is a
+            plugin to allow arbitrary saving of files.
+    """
+
     def verify_config_section(self, config_section):
+        """ A default implementation of verify_config_section for the Saver class, this version
+                allows empty configs, or a config only with an addtl-base section. """
         if(config_section is None):
             return True
         
@@ -86,5 +90,16 @@ class Saver(ConfigurablePlugin):
             raise ConfigurationException(f"Default verify_config_section for Saver expects either an empty config section or a section with only \"addtl-base\"")
 
     @abstractmethod
-    def save(self, prog_data: ProgramData, config_section: dict, base_path: str):
+    def save(self, prog_data: ProgramData, config_section: dict, base_path: str) -> list[str]:
+        """ Save the data from the DataRepository.
+        
+        Arguments:
+            prog_data (ProgramData): The program data.
+            config_section (dict): The configuration section for this plugin.
+            base_path (str): The base path for files to be saved to. Specified in run configuration 
+                as saving.base_path and in the config_section.addtl-base.
+
+        Returns:
+            list[str]: A list of file paths that the Saver plugin saved. 
+        """
         pass

@@ -1,26 +1,33 @@
-import pandas as pd
-import numpy as np
 from dataclasses import dataclass
-import typing
-from typing import Callable
+from typing import Callable, Any
 
-from src.data.identifier import AnalysisIdentifier
 from src.data.data_repository import DataRepository
-from src.plugin_mgmt.plugins import AnalysisDriverPlugin
-from src.data.identifier import Identifier
-from src.plugin_mgmt.plugins import Analysis
+from src.data.identifier import Identifier, AnalysisIdentifier
+from src.plugin_mgmt.plugins import Analysis, AnalysisDriverPlugin
 
-import src.plugins_builtin.simple_analysis_driver as pkg
+import src.builtin_plugins.simple_analysis_driver as pkg
 
 @dataclass(frozen=True)
 class SimpleAnalysis(Analysis):
+    """ The SimpleAnalysis is intented to be the "first layer" of analyses on top of ingested data.
+        Since the SimpleAnalysis has a constrained pipeline, it means only simple operations can be
+            performed. See details about the pipeline under SimpleAnalysisDriver. 
+    """
     filter: Callable[[Identifier], bool]
-    method: Callable
+    """ A DataRepository filter. """
+    method: Callable[[Identifier, DataRepository], Any]
 
 class SimpleAnalysisDriver(AnalysisDriverPlugin):
+    """ The SimpleAnalysis process has two phases:
+            Filter -> Method 
+        The filter and method have specific signatures, see definitions in SimpleAnalysis class.
+    """
     SERVED_TYPE = pkg.SimpleAnalysis
 
     def run_analysis(self, analysis: pkg.SimpleAnalysis, prog_data, config_section: dict):
+        """ The SimpleAnalysisDriver will poll the DataRepository with the passed filter, then run 
+                the passed method on it. Storing the data with the default AnalysisIdentifier. 
+        """
         data_repo: DataRepository = prog_data.data_repo
 
         # Get filter and apply to data_repo, the filter finds the Identifiers that the analysis

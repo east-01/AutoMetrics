@@ -1,8 +1,8 @@
-import os
+from dataclasses import dataclass
 import importlib.util
 import inspect
+import os
 import sys
-from dataclasses import dataclass
 
 from src.plugin_mgmt.plugins import IngestPlugin, Analysis, AnalysisPlugin, AnalysisDriverPlugin, Saver
 
@@ -22,7 +22,7 @@ class LoadedPlugins:
 #region Loading
     def load_plugins(self):
         """
-        Load all of the plugins in the plugins directory, automatically reads and populates
+        Load all of the plugins in the ./plugins AND ./src/builtin_plugins/. Automatically reads and populates
             extensions of the types in plugins.py. Instantiated objects are stored in the internal
             dataclass lists and can be read by the user.
         
@@ -35,7 +35,7 @@ class LoadedPlugins:
         self.savers = []
 
         self.load_plugins_from_directory(MODULE_DIR)
-        self.load_plugins_from_directory("./src/plugins_builtin/")
+        self.load_plugins_from_directory("./src/builtin_plugins/")
 
     def load_plugins_from_directory(self, directory):
         for root, dirs, files in os.walk(directory):
@@ -119,6 +119,17 @@ class LoadedPlugins:
         }
 
     def get_plugin_by_name(self, name: str):
+        """
+        Get a plugin by its type name. This method doesn't know the plugin type, so we have to
+            search through all plugin types.
+
+        Raises:
+            Exception: There are no plugins with this name
+
+        Returns:
+            Any: The plugin type with the specified name
+        """
+
         lists = self.get_plugin_lists()
         for plugin_type in lists.keys():
             try:
@@ -130,6 +141,16 @@ class LoadedPlugins:
 
 
     def get_plugin_by_name_type(self, plugin_type: str, name: str):
+        """
+        Get a plugin by its type name, searching in the plugin_types' list.
+
+        Raises:
+            Exception: There are no plugins with this name in the plugin_types list.
+
+        Returns:
+            Any: The plugin type with the specified name
+        """
+
         lists = self.get_plugin_lists()
 
         if(plugin_type not in lists.keys()):

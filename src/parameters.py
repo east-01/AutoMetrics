@@ -4,7 +4,7 @@ import os
 import yaml
 import traceback
 
-from src.program_data.parameter_utils import parse_time_range, parse_analysis_options, ConfigurationException, ArgumentException
+from src.parameter_utils import parse_time_range, parse_analysis_options, ConfigurationException, ArgumentException
 
 def load_parameters():
     try:

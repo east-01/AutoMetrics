@@ -2,10 +2,8 @@
 #   class is created all of the same information can be accessed.
 import pandas as pd
 
-# from src.program_data.settings import settings
-from program_data.parameters import load_arguments, verify_arguments, ArgumentException
-from src.program_data.parameters import load_config, verify_config, ConfigurationException
-from src.data.data_repository import DataRepository
+# from src.settings import settings
+from src.parameters import ArgumentException, ConfigurationException, verify_arguments, verify_config
 from src.data.timeline import Timeline
 
 class ProgramData():

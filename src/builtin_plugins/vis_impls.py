@@ -1,10 +1,16 @@
+import datetime
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
-import datetime
 
 from src.data.data_repository import DataRepository
 
 def plot_simple_bargraph(data_repo: DataRepository, identifier, title, subtext, color):
+    """
+    Plots a bargraph comparing values between rows.
+    Expects a dataframe with the first column being bar name, and the following column being bar
+        value.
+    """
+
     df, meta_data = data_repo.get(identifier)
 
     df = df.set_index(df.columns[0])
@@ -112,8 +118,6 @@ def plot_time_series(data_repo: DataRepository, identifier, title, colors={}, de
     ax.xaxis.set_major_formatter(mdates.DateFormatter('%b %Y'))
 
     # Add labels, title, and legend
-    # ax.set_xlabel('Month')
-    # ax.set_ylabel('Hours')
     ax.set_title(title)
     ax.legend()
     ax.grid(True)

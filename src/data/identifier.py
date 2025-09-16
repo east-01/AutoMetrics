@@ -1,8 +1,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
-from src.utils.timeutils import get_range_printable
-
 @dataclass(frozen=True)
 class Identifier(ABC):
     @abstractmethod
