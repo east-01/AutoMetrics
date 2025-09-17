@@ -1,9 +1,10 @@
 venv
 
+configs*/
 io*
 output*
 input*
-temp
+temp*
 *notes.txt
 *.DS_Store
 .vscode/
