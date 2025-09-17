@@ -7,11 +7,11 @@ import traceback
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, project_root)
 
-from src.plugin_mgmt.pluginloader import LoadedPlugins
-from src.parameters import load_parameters, ConfigurationException
-from src.program_data import ProgramData
-from src.data.data_repository import DataRepository
 from src.analysis import get_analysis_order
+from src.data.data_repository import DataRepository
+from src.parameters import load_parameters, ConfigurationException
+from src.plugin_mgmt.pluginloader import LoadedPlugins
+from src.program_data import ProgramData
 
 # Hides warnings for .fillna() calls
 pd.set_option('future.no_silent_downcasting', True)

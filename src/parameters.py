@@ -4,7 +4,7 @@ import os
 import yaml
 import traceback
 
-from src.parameter_utils import parse_time_range, parse_analysis_options, ConfigurationException, ArgumentException
+from src.parameter_utils import parse_time_range, ConfigurationException, ArgumentException
 
 def load_parameters():
     try:
@@ -33,7 +33,7 @@ def load_arguments():
     parser = argparse.ArgumentParser(prog='AutoTM', description='Auto Tide Metrics- Collect and visualize tide metrics')
     parser.add_argument("config", default="./config.yaml", type=str, help="The location of the config file to use.")
     parser.add_argument('-p', '--period', dest='period', type=parse_time_range, help="A time range of the format <start>-<end> where your start and end times are UNIX timestamps.")
-    parser.add_argument('-a', '--analyses', dest='analysis_options', type=parse_analysis_options, help="A list of analysis options separated by a comma (no spaces).")
+    parser.add_argument('-a', '--analyses', dest='analysis_options', type=lambda opt: opt.split(","), help="A list of analysis options separated by a comma (no spaces).")
     parser.add_argument('-v', dest='verbose', action='store_true', help="Enable verbose output.")
     parser.add_argument('--verify-config', dest="verifyconfig", action='store_true', help='Load plugins and check their configurations, early exit.')
 
