@@ -24,7 +24,11 @@ order = {
     "csudh": [],
     "calpoly": [],
     "calstate": [],
-    "sonoma": []
+    "sonoma": [],
+    "csub": [],
+    "csueastbay": [],
+    "csumb": [],
+    "csum": []
 }
 
 ###################

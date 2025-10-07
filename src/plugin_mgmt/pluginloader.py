@@ -38,7 +38,7 @@ class LoadedPlugins:
         self.load_plugins_from_directory("./src/builtin_plugins/")
 
     def load_plugins_from_directory(self, directory):
-        for root, dirs, files in os.walk(directory):
+        for root, dirs, files in os.walk(directory, followlinks=True):
             if(root.endswith("__pycache__")):
                 continue
 

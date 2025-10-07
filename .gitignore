@@ -1,6 +1,7 @@
 venv
 
-configs*/
+configs*
+plugins/*
 io*
 output*
 input*

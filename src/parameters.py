@@ -6,6 +6,8 @@ import traceback
 
 from src.parameter_utils import parse_time_range, ConfigurationException, ArgumentException
 
+EXIT_ACTION_CHOICES=['none', 'openeach', 'opendir']
+
 def load_parameters():
     try:
         args = load_arguments()
@@ -36,6 +38,7 @@ def load_arguments():
     parser.add_argument('-a', '--analyses', dest='analysis_options', type=lambda opt: opt.split(","), help="A list of analysis options separated by a comma (no spaces).")
     parser.add_argument('-v', dest='verbose', action='store_true', help="Enable verbose output.")
     parser.add_argument('--verify-config', dest="verifyconfig", action='store_true', help='Load plugins and check their configurations, early exit.')
+    parser.add_argument('--exit-action', dest='exitaction', choices=EXIT_ACTION_CHOICES, help="What exit action to take when files are done saving. Can open each individual file, or just open the directory with the systems file explorer.")
 
     return parser.parse_args()
 
@@ -116,3 +119,17 @@ def install_config(config, args):
             raise ConfigurationException(f"There was no provided analyses in arguments, and they aren't present in the config. Specify the analysis options in either config under analyses.run or arguments.")
         else:
             args.analysis_options = config["analysis"]["run"]
+
+    if(args.exitaction is None):
+        # We'll only overwrite the argument if the argument is null and 
+        exit_action_exists = ("saving" in config.keys() and 
+                              "exit-action" in config["saving"].keys())
+
+        if(exit_action_exists):
+            exit_action = config["saving"]["exit-action"]
+            exit_action_not_none = (exit_action is not None and 
+                                    exit_action != "none")            
+            if(exit_action_not_none and exit_action not in EXIT_ACTION_CHOICES):
+                raise ConfigurationException(f"Can't overwrite with config exit action \"{exit_action}\" the exit action choices are: {", ".join(EXIT_ACTION_CHOICES)}")
+            
+            args.exitaction = exit_action

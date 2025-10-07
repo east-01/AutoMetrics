@@ -89,6 +89,9 @@ for ingest_plugin_name in prog_data.config["ingest"]["run"]:
         exit(2)
 
 print()
+
+if(args.verbose):
+    prog_data.data_repo.print_contents()
 #endregion
 
 #region Analysis
@@ -118,6 +121,9 @@ for analysis in analysis_order:
         exit(2)
 
 print()
+
+if(args.verbose):
+    prog_data.data_repo.print_contents()
 #endregion
 
 #region Saving
@@ -166,8 +172,13 @@ def open_file(path: str):
     else:
         raise OSError(f"Unsupported platform: {sys.platform}")
     
-for saved_file in all_saved_files:
-    open_file(saved_file)
+if(args.exitaction == "openeach"):
+    print(f"Exit action: opening each saved file.")
+    for saved_file in all_saved_files:
+        open_file(saved_file)
+elif(args.exitaction == "opendir"):
+    print("Exit action: opening directory.")
+    open_file(os.path.abspath(base_path))
 
 try:
     import psutil

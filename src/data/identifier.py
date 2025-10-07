@@ -87,3 +87,16 @@ class MetaAnalysisIdentifier(AnalysisIdentifier):
 
     def __str__(self) -> str:
         return f"{self.analysis}-{self.key}({self.on})"
+
+@dataclass(frozen=True)
+class AggregateAnalysisIdentifier(AnalysisIdentifier):
+    key: str
+
+    def __hash__(self) -> int:
+        return hash((super().__hash__(), self.key))
+
+    def __eq__(self, other) -> bool:
+        return isinstance(other, AggregateAnalysisIdentifier) and super().__eq__(other) and self.key == other.key
+
+    def __str__(self) -> str:
+        return f"{self.analysis}-{self.key}"

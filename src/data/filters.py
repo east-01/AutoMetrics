@@ -38,13 +38,26 @@ def filter_analyis_type(analysis_type: str):
     Get a list of AnalysisIdentifiers that have the same analysis type.
 
     Args:
-        targ_identifier (Identifier): The identifier that the analyses are performed on.
+        analysis_type (str): The name of the analysis to filter
     Returns:
         Callable[[Identifier], bool]: The lambda operation.
     """
 
     analysis_type_lambda = filter_type(AnalysisIdentifier)
     return lambda identifier: analysis_type_lambda(identifier) and identifier.analysis == analysis_type
+
+def filter_multiple_analyis_type(analysis_types: list[str]):
+    """
+    Get a list of AnalysisIdentifiers that have the same analysis type.
+
+    Args:
+        analysis_types (list[str]): The list of names of the analyses to filter
+    Returns:
+        Callable[[Identifier], bool]: The lambda operation.
+    """
+
+    analysis_type_lambda = filter_type(AnalysisIdentifier)
+    return lambda identifier: analysis_type_lambda(identifier) and identifier.analysis in analysis_types
 
 def filter_analyses_of(targ_identifier: Identifier):
     """

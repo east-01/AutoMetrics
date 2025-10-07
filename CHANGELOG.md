@@ -1,15 +1,43 @@
 # Changelog
 
-All notable changes to **AutoTM (Tide Metrics Automation)** will be documented in this file.
+All notable changes to **AutoMetrics** will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),  
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.1.5] - Unreleased
+## [X.X.X] - Unreleased
 ### TODO
-- Add tests for DataRepository#Join
-- Add tests for Processors#check_overlaps
-- Add tests for new filters
+- Tests overhaul
+
+## [2.0.1] - 2025-10-07
+### Added
+- Aggregate analysis for collecting multiple Analyses into one.
+- Aggregate analysis driver to perform aggregate analyses.
+- Exit actions: open the saved files or directory on program exit.
+
+### Changed
+- Updated TechnicalDetails.md document.
+
+### Fixed
+- The plugin loader will now follow symlinks.
+
+## [2.0.0] - 2025-09-22
+### Added
+- Plugins: Each phase of AutoMetrics can support an arbitrary amount of custom plugins. The following plugins are:
+    - IngestPlugin: Ingests data into AutoMetrics
+    - AnalysisPlugin: Acts as a container for a list of analyses to load into AutoMetrics.
+    - AnalysisDriver: Pairs with a specifc analysis type to perform more nuanced analyses.
+    - Saver: Saves data from AutoMetrics to the file system.
+
+### Changed
+- Refactored codebase so there's only the main.py file interacting with plugins, increasing simplicity.
+- Parameters: Program arguments and configuration are handled differently.
+    - Configurations are set up to be created for each group of analyses you want to perform. See readme.
+    - Program arguments supplement the configuration, arguments are able to override configuration.
+
+### Removed
+- Removed all RCI related code, converted them into plugins. Split into a new repository at [RCI Metrics](https://github.com/east-01/RCI-Metrics).
+    - Changelog info for the same update to that code is 1.0.0 under RCI Metrics
 
 ## [1.1.4] - 2025-07-07
 ### Added
