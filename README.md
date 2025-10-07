@@ -70,14 +70,13 @@ MonthYear | -p January25
 MonthYear range | -p January25-March25
 Unix timestamp range | -p 1738396800-1740815999
 
-**exit-action**: _Can be overridden in arguments._ The action to take once AutoMetrics finishes running. Options are: `[none, openeach, opendir]`. `openeach` opens each file individually, `opendir` opens the directory.
-
 **ingest**: Has a single sub-section, run, which is a list of IngestPlugins to run. See [Plugins](#plugins) for details.
 
 **analysis**: _Can be overridden in arguments._ Has a single sub-section, run, which is a list of Analyses to perform. See [Plugins](#plugins) for details.
 
 **saving**: 
 - **base-path**: Specifies the base path for all files to be saved to; Saver plugins also have an "addtl-base" section, meaning a filepath for a specific Saver plugin can look like `<base-path>/<addtl-base>/`.
+- **exit-action**: _Can be overridden in arguments._ The action to take once AutoMetrics finishes running. Options are: `[none, openeach, opendir]`. `openeach` opens each file individually, `opendir` opens the directory.
 - **run**: A list of Saver plugins to run. See [Plugins](#plugins) for details.
 
 #### Configurable plugins
