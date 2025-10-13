@@ -7,6 +7,7 @@ from src.data.data_repository import DataRepository
 from src.data.filters import filter_type, filter_analyis_type
 from src.data.identifier import Identifier, MetaAnalysisIdentifier, TimeStampIdentifier
 from src.plugin_mgmt.plugins import Analysis, AnalysisDriverPlugin
+from src.utils.datautils import resolve_analysis
 from src.utils.timeutils import get_range_printable
 
 import src.builtin_plugins.meta_analysis_driver as pkg
@@ -55,22 +56,6 @@ class MetaAnalysisDriver(AnalysisDriverPlugin):
 
             out_df = pd.DataFrame(columns=(["Period"]+sub_analyses))
 
-            def resolve_analysis(start_ts, end_ts, analysis_name):
-                """ Resolve an analysis identifier with a specific analysis and matching start and 
-                        end timestamps. Matches with the key method as well. """
-                
-                for identifier in data_repo.filter_ids(filter_analyis_type(analysis_name)):
-                    key_val = key_method(identifier)
-                    if(key_val != unique_key):
-                        continue
-
-                    src_id = identifier.find_base()
-
-                    if(src_id.start_ts == start_ts and src_id.end_ts == end_ts):
-                        return identifier
-                    
-                return None
-
             for identifier in timestamps:
                 start_ts = identifier.start_ts
                 end_ts = identifier.end_ts
@@ -79,7 +64,7 @@ class MetaAnalysisDriver(AnalysisDriverPlugin):
                 row = [readable_period]
 
                 for sub_analysis in sub_analyses:
-                    analysis_id = resolve_analysis(start_ts, end_ts, sub_analysis)
+                    analysis_id = resolve_analysis(data_repo, start_ts, end_ts, sub_analysis, key_method=key_method, unique_key=unique_key)
                     if(analysis_id is None):
                         row.append(0)
                         continue

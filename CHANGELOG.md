@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### TODO
 - Tests overhaul
 
+## [2.0.2] - 2025-10-13
+### Fixed
+- Keying problems with meta analyses and aggregate analyses
+- Timeline forcing sub-month long periods to a full month
+- Mislabeles messages in main
+
 ## [2.0.1] - 2025-10-07
 ### Added
 - Aggregate analysis for collecting multiple Analyses into one.

@@ -35,18 +35,17 @@ class AggregateAnalysisDriver(AnalysisDriverPlugin):
         """
 
         data_repo: DataRepository = prog_data.data_repo
-        # The list of analyses that this meta-analysis is compiling
-        sub_analyses = analysis.prereq_analyses 
+
         key_method = analysis.key_method
         if(key_method is None):
             key_method = lambda x: None
         filter_method = analysis.filter
         analysis_method = analysis.method
 
-        unique_keys = get_all_unique_keys(data_repo, sub_analyses, key_method)
+        unique_keys = get_all_unique_keys(data_repo, analysis.filter, key_method)
 
         if(len(unique_keys) == 0):
-            raise Exception(f"Failed to run meta analysis, key method \"{key_method}\" couldn't find keys.")
+            raise Exception(f"Failed to run aggregate analysis \"{analysis.name}\": key method \"{key_method.__name__}\" couldn't find keys.")
 
         for unique_key in unique_keys:
             
@@ -58,20 +57,16 @@ class AggregateAnalysisDriver(AnalysisDriverPlugin):
             out_identifier = AggregateAnalysisIdentifier(None, analysis.name, unique_key)
             data_repo.add(out_identifier, result)
 
-def get_all_unique_keys(data_repo: DataRepository, analysis_names: list[str], key_method):
+def get_all_unique_keys(data_repo: DataRepository, filter_method, key_method):
     """ List form for analysis_names of get_unique_keys. """
 
     out_set = set()
 
-    for analysis_name in analysis_names:
-        keys = get_unique_keys(data_repo, analysis_name, key_method)
-        out_set.update(keys)
+    identifiers = data_repo.filter_ids(filter_method)
+    if(len(identifiers) == 0):
+        raise Exception("Failed to get unique keys. Filter yielded 0 identifiers.")
+
+    for identifier in identifiers:
+        out_set.add(key_method(identifier))
     
     return out_set
-
-def get_unique_keys(data_repo: DataRepository, analysis_name: str, key_method):
-    """ Get the unique set of keys that are retrieved by the key_method from this specific
-            analysis. Serves as the grouping key for the meta-analysis. """
-
-    identifiers = data_repo.filter_ids(filter_analyis_type(analysis_name))
-    return set([key_method(id) for id in identifiers])

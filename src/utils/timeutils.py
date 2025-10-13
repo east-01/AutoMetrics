@@ -95,6 +95,8 @@ def break_period_into_months(start_ts, end_ts):
     for _ in range(12*20): # Maximum of 20 year spans for breaking up period
         start_dt = datetime.datetime.fromtimestamp(start_ts)
         curr_end = get_unix_timestamp_range(start_dt.month, start_dt.year)[1]
+        if(curr_end > end_ts):
+            curr_end = end_ts
 
         periods.append((start_ts, curr_end))
 

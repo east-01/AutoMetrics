@@ -116,7 +116,7 @@ for analysis in analysis_order:
     try:
         driver.run_analysis(analysis, prog_data, config_section)
     except Exception as e:
-        print(f"Analysis driver plugin \"{ingest_plugin_name}\" failed on analysis \"{analysis.name}\":")
+        print(f"Analysis driver plugin \"{type(driver).__name__}\" failed on analysis \"{analysis.name}\":")
         traceback.print_exc()
         exit(2)
 
@@ -152,7 +152,8 @@ for saver_name in prog_data.config["saving"]["run"]:
 
     try:
         saved_files = saver_plugin.save(prog_data, saver_config_section, specific_base_path)
-        all_saved_files.extend(saved_files)
+        if(saved_files is not None):
+            all_saved_files.extend(saved_files)
     except Exception as e:
         print(f"Saver plugin \"{saver_name}\" failed:")
         traceback.print_exc()        
