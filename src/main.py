@@ -9,7 +9,8 @@ sys.path.insert(0, project_root)
 
 from src.analysis import get_analysis_order
 from src.data.data_repository import DataRepository
-from src.parameters import load_parameters, ConfigurationException
+from src.parameter_utils import ConfigurationException
+from src.parameters import load_parameters
 from src.plugin_mgmt.pluginloader import LoadedPlugins
 from src.program_data import ProgramData
 

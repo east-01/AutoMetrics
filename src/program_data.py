@@ -3,8 +3,9 @@
 import pandas as pd
 
 # from src.settings import settings
-from src.parameters import ArgumentException, ConfigurationException, verify_arguments, verify_config
-from src.data.timeline import Timeline
+from src.parameter_utils import ConfigurationException
+from src.parameters import ArgumentException, verify_arguments, verify_config
+from src.data.timeline import Timeline, TIMELINE_SECTION_NAME
 
 class ProgramData():
     def __init__(self, loaded_plugins, args, config):
@@ -28,4 +29,4 @@ class ProgramData():
             print(f"Invalid config: {e}")
             exit()
 
-        self.timeline = Timeline(self.args.period[0], self.args.period[1])
+        self.timeline = Timeline(self.config[TIMELINE_SECTION_NAME], self.args.period[0], self.args.period[1])

@@ -5,6 +5,7 @@ import yaml
 import traceback
 
 from src.parameter_utils import parse_time_range, ConfigurationException, ArgumentException
+from src.data.timeline import verify_timeline_config, TIMELINE_SECTION_NAME
 
 EXIT_ACTION_CHOICES=['none', 'openeach', 'opendir']
 
@@ -96,11 +97,14 @@ def verify_config(prog_data, config):
         if(name not in config):
             raise ConfigurationException(f"{desc} not configured. Make sure run config includes \"{name}\" as a top level section.")
         if("run" not in config[name]):
-            raise ConfigurationException(f"{desc} \"run\" section not configured. Make sure run config includes \"{name}.run\" as a section, with a list of plugins.")
+            raise ConfigurationException(f"{desc} \"run\" section not configured. Make sure run config includes \"{name}.run\" as a section, with a list of related plugins.")
 
     check_phase_section("ingest", "Ingest controllers")
     check_phase_section("analysis", "Analyses")
     check_phase_section("saving", "Saving")
+
+    if(TIMELINE_SECTION_NAME in config):
+        verify_timeline_config(config[TIMELINE_SECTION_NAME])
     
 def install_config(config, args):
     """ Install the config onto the arguments object, replacing missing values with ones from the 
