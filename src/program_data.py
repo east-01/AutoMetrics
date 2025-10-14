@@ -29,4 +29,8 @@ class ProgramData():
             print(f"Invalid config: {e}")
             exit()
 
-        self.timeline = Timeline(self.config[TIMELINE_SECTION_NAME], self.args.period[0], self.args.period[1])
+        timeline_conf = dict()
+        if(TIMELINE_SECTION_NAME in self.config.keys()):
+            timeline_conf = self.config[TIMELINE_SECTION_NAME]
+            
+        self.timeline = Timeline(timeline_conf, self.args.period[0], self.args.period[1])
