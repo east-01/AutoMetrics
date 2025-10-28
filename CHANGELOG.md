@@ -8,6 +8,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [X.X.X] - Unreleased
 ### TODO
 - Tests overhaul
+- Add JupyterHub per-user hours
+
+## [2.0.3] - 2025-10-28
+### Added
+- Advanced period parsing
+
+### Removed
+- Extra scripts, moved them to RCI-Metrics
+
+### Fixed
+- Saving problems for AnalysisSaver, added support for None identifiers.
 
 ## [2.0.2] - 2025-10-13
 ### Fixed

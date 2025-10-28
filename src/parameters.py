@@ -4,7 +4,7 @@ import os
 import yaml
 import traceback
 
-from src.parameter_utils import parse_time_range, ConfigurationException, ArgumentException
+from src.parameter_utils import parse_period_argument, ConfigurationException, ArgumentException
 from src.data.timeline import verify_timeline_config, TIMELINE_SECTION_NAME
 
 EXIT_ACTION_CHOICES=['none', 'openeach', 'opendir']
@@ -35,7 +35,7 @@ def load_arguments():
 
     parser = argparse.ArgumentParser(prog='AutoTM', description='Auto Tide Metrics- Collect and visualize tide metrics')
     parser.add_argument("config", default="./config.yaml", type=str, help="The location of the config file to use.")
-    parser.add_argument('-p', '--period', dest='period', type=parse_time_range, help="A time range of the format <start>-<end> where your start and end times are UNIX timestamps.")
+    parser.add_argument('-p', '--period', dest='period', type=parse_period_argument, help="A time range of the format <start>-<end> where your start and end times are UNIX timestamps.")
     parser.add_argument('-a', '--analyses', dest='analysis_options', type=lambda opt: opt.split(","), help="A list of analysis options separated by a comma (no spaces).")
     parser.add_argument('-v', dest='verbose', action='store_true', help="Enable verbose output.")
     parser.add_argument('--verify-config', dest="verifyconfig", action='store_true', help='Load plugins and check their configurations, early exit.')
@@ -61,10 +61,15 @@ def verify_arguments(prog_data):
         except Exception as e:
             raise ArgumentException(f"Failed to parse analysis option list, \"{analysis_option}\" is not recognized as loaded analysis option.")
 
-    if(args.period is not None):
-        now = int(time.time())
-        if(args.period[0] > now or args.period[1] > now):
-            raise ArgumentException("Either the start or end times of the period exceeds current time.")
+    if(args.period is None):
+        raise ArgumentException("Failed to get period.")
+    
+    now = int(time.time())
+    if(args.period[0] > now or args.period[1] > now):
+        raise ArgumentException("Either the start or end times of the period exceeds current time.")
+    
+    if(args.period[1] < args.period[0]):
+        raise ArgumentException(f"The period's end time is before the start time.")
 
 def load_config(config_location = "./config.yaml"):
     if(not os.path.isfile(config_location)):
@@ -114,7 +119,7 @@ def install_config(config, args):
         if("period" not in config.keys()):
             raise ConfigurationException(f"There was no period provided in arguments, and it isn't present in the config. Specify the period in either config or arguments.")
         else:
-            args.period = parse_time_range(config["period"])
+            args.period = parse_period_argument(config["period"])
 
     if(args.analysis_options is None):
         if("analysis" not in config.keys()):

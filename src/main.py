@@ -66,6 +66,14 @@ if(prog_data.args.verifyconfig):
 print()
 #endregion
 
+analysis_order = get_analysis_order(prog_data)
+analysis_order_printable = ", ".join([analysis.name for analysis in analysis_order])
+print(f"""### Loaded, starting...
+        \r  {prog_data.timeline}
+        \rAnalyses:
+        \r  {analysis_order_printable}
+        \r""")
+
 #region Ingest
 print("### Ingesting data...")
 prog_data.data_repo = DataRepository()
@@ -97,10 +105,6 @@ if(args.verbose):
 
 #region Analysis
 print("### Analyzing...")
-analysis_order = get_analysis_order(prog_data)
-
-analysis_order_printable = ", ".join([analysis.name for analysis in analysis_order])
-print(f"Analysis order: {analysis_order_printable}")
 
 for analysis in analysis_order:
     driver = plugins.get_analysis_driver(type(analysis))

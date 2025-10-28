@@ -20,3 +20,9 @@ def append_line_to_file(path, line, overwrite = False):
             contents += "\n"
         contents += line
         file.write(contents)
+
+def convert_readable_period_fs(readable_period: str):
+    """ Convert a readable period string (see timeutils.py) into a string that is compatible with
+          the file system. """
+    
+    return readable_period.replace("/", "_").replace(" ", "T").replace(":", "")

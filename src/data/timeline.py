@@ -1,6 +1,6 @@
 from src.parameter_utils import ConfigurationException
 from src.utils.config_checker import verify_sections_exist
-from src.utils.timeutils import break_period_into_months, break_down_period
+from src.utils.timeutils import break_period_into_months, break_down_period, get_range_printable
 
 class Timeline:
     """ The Timeline acts as a standard agreed upon timeframe to fit data points into. This helps
@@ -22,13 +22,15 @@ class Timeline:
         sub_period_max_len = 60*60*24*7
         if("sub_period_max_len" in config):
             sub_period_max_len = int(config["sub_period_max_len"])
-        print(f"maxlen: {sub_period_max_len}")
 
         self.main_periods = break_period_into_months(start_ts, end_ts)
         self.periods = []
         for period in self.main_periods:
             sub_periods = break_down_period(period[0], period[1], target_length=sub_period_max_len)
             self.periods.extend(sub_periods)
+
+    def __str__(self):
+        return get_range_printable(self.main_periods[0][0], self.main_periods[-1][1])
 
 TIMELINE_SECTION_NAME = "timeline"
 def verify_timeline_config(config_section):

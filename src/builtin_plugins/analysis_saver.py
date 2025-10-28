@@ -1,3 +1,4 @@
+from collections.abc import Iterable
 import os
 import pandas as pd
 
@@ -53,8 +54,6 @@ class AnalysisSaver(Saver):
             # If no whitelist, we'll just get all of the AnalysisIdentifiers
             identifiers = data_repo.filter_ids(filter_type(AnalysisIdentifier))
 
-        all_saved_files = []
-
         # Loop through each result given by identifiers saving it by its type
         for identifier in identifiers:
             identifier: AnalysisIdentifier = identifier
@@ -66,44 +65,30 @@ class AnalysisSaver(Saver):
                 return
 
             if(isinstance(identifier, MetaAnalysisIdentifier)):
-                saved_files = self.save_meta_analysis(identifier)
+                self.save_meta_analysis(identifier)
             else:
-                saved_files = self.save_analysis(identifier)
+                self.save_analysis(identifier)
+        
+        self.save_text_results()
 
-            all_saved_files.extend(saved_files)
-
-        # Save text results, order keys by start time
-        ordered_keys = sorted(self.text_results.keys(), key=lambda x: x.start_ts)
-        for identifier in ordered_keys:
-
-            if(len(self.text_results[identifier]) > 0):
-                path = os.path.join(self.base_path, f"text_results.txt")
-                out_file_name = get_range_printable(identifier.start_ts, identifier.end_ts, 3600)
-                to_append = f"For {out_file_name}:\n  {"\n  ".join(self.text_results[identifier])}"
-
-                append_line_to_file(path, to_append, path not in self.has_written)
-                self.has_written.add(path)
-
-        all_saved_files.append(self.has_written)
-
-        return all_saved_files
+        return list(self.has_written)
 
     def save_analysis(self, identifier: AnalysisIdentifier):
 
         data_repo: DataRepository = self.prog_data.data_repo
-
-        result = data_repo.get_data(identifier)
-        
         src_id = identifier.find_base()
+        result = data_repo.get_data(identifier)        
 
-        # Make sure the directory holding these results is there
         readable_period = "Unknown period"
         if(src_id is not None):
             readable_period = get_range_printable(src_id.start_ts, src_id.end_ts, 3600)
+
+        # Make sure the directory holding these results is there
         analysis_dir_path = os.path.join(self.base_path, f"{readable_period} analysis")
         if(not os.path.exists(analysis_dir_path)):
             os.mkdir(analysis_dir_path)
 
+        # Ensure there is a list to append to
         if(src_id not in self.text_results.keys()):
             self.text_results[src_id] = []
 
@@ -112,10 +97,36 @@ class AnalysisSaver(Saver):
             path = os.path.join(analysis_dir_path, f"{identifier.analysis}.csv")
             print(f"  Saving analysis file \"{path}\"")
             result.to_csv(path, index=False)
-            return [path]
+
+            self.has_written.add(path)
         else:
-            self.text_results[src_id].append(f"{identifier.analysis}: {str(result)}")
-            return []
+            if(isinstance(result, Iterable) and not isinstance(result, str)):
+                result = ", ".join(result)
+            else:
+                result = str(result)
+
+            self.text_results[src_id].append(f"{identifier.analysis}: {result}")
+
+    def save_text_results(self):
+        path = os.path.join(self.base_path, f"text_results.txt")
+
+        # Save text results, order keys by start time
+        ordered_keys = sorted(self.text_results.keys(), key=lambda x: x.start_ts if hasattr(x, "start_ts") and not None else -float('inf'))
+        for identifier in ordered_keys:
+
+            if(len(self.text_results[identifier]) == 0):
+                continue
+            
+            out_name = str(identifier) if identifier else "Unknown period"
+            to_append = f"For {out_name}:\n  {"\n  ".join(self.text_results[identifier])}"
+
+            overwrite = path not in self.has_written
+            append_line_to_file(path, to_append, overwrite)
+
+            self.has_written.add(path)
+
+        if(path in self.has_written):
+            print(f"  Saved analysis text results file \"{path}\"")
 
     def save_meta_analysis(self, identifier):
         data_repo: DataRepository = self.prog_data.data_repo
@@ -133,7 +144,5 @@ class AnalysisSaver(Saver):
         path = os.path.join(analysis_dir_path, f"{identifier.analysis}.csv")
         print(f"  Saving analysis file \"{path}\"")
         result.to_csv(path, index=False)
-        return [path]
-                
-            
-            
+
+        self.has_written.add(path)
