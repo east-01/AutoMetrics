@@ -64,11 +64,15 @@ if(prog_data.args.verifyconfig):
     exit()
 
 print()
-#endregion
 
 analysis_order = get_analysis_order(prog_data)
 analysis_order_printable = ", ".join([analysis.name for analysis in analysis_order])
+
+print()
+#endregion
+
 print(f"""### Loaded, starting...
+        \rTimeline:
         \r  {prog_data.timeline}
         \rAnalyses:
         \r  {analysis_order_printable}
