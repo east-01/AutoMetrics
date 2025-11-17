@@ -56,7 +56,9 @@ for plugin_name in prog_data.loaded_plugins.loaded_plugin_names:
 config_section = None # Clear from above use
 
 if(successes != config_checks):
+    print(f"!!!!!!!!!!!!!!!!!!!!!!!!!!")
     print(f"WARNING: {successes}/{config_checks} configs valid.")
+    print(f"!!!!!!!!!!!!!!!!!!!!!!!!!!")
 else:
     print(f"All configs valid.")
 

@@ -10,6 +10,17 @@ def from_unix_ts(timestamp):
     dt_object = datetime.datetime.fromtimestamp(timestamp)
     return f"{dt_object.month}/{dt_object.day}/{dt_object.year} {dt_object.hour}:{dt_object.minute:02d}"
 
+def from_unix_ts_as_monthday(timestamp):
+    dt = datetime.datetime.fromtimestamp(timestamp)
+    month_name = dt.strftime("%B")
+    return f"{month_name} {add_ordinal(dt.day)}"
+
+def add_ordinal(n):
+    if 11 <= n % 100 <= 13:
+        return f"{n}th"
+    endings = {1: "st", 2: "nd", 3: "rd"}
+    return f"{n}{endings.get(n % 10, 'th')}"
+
 def to_unix_ts(date_time_str):
     """
     Given a timestamp of the format %m/%d/%Y %H:%M convert to UNIX timestamp.
