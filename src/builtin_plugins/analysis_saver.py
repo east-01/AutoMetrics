@@ -101,7 +101,7 @@ class AnalysisSaver(Saver):
             self.has_written.add(path)
         else:
             if(isinstance(result, Iterable) and not isinstance(result, str)):
-                result = ", ".join(result)
+                result = ", ".join(map(str, result))
             else:
                 result = str(result)
 

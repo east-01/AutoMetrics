@@ -38,7 +38,7 @@ class SimpleAnalysisDriver(AnalysisDriverPlugin):
         # If the length of the target identifiers is zero then we can't perform and fulfill 
         #   the analysis.
         if(len(identifiers) == 0):
-            return
+            print(f"WARNING: Selected 0 identifiers for analysis \"{analysis.name}\"")
 
         for identifier in identifiers:
             analysis_result = analysis.method(identifier, data_repo)

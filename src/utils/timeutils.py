@@ -15,6 +15,11 @@ def from_unix_ts_as_monthday(timestamp):
     month_name = dt.strftime("%B")
     return f"{month_name} {add_ordinal(dt.day)}"
 
+def from_unix_ts_as_monthyear(timestamp):
+    dt = datetime.datetime.fromtimestamp(timestamp)
+    month_name = dt.strftime("%B")
+    return f"{month_name} {dt.year}"
+
 def add_ordinal(n):
     if 11 <= n % 100 <= 13:
         return f"{n}th"
