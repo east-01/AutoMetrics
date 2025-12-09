@@ -79,12 +79,8 @@ class AnalysisSaver(Saver):
         src_id = identifier.find_base()
         result = data_repo.get_data(identifier)        
 
-        readable_period = "Unknown period"
-        if(src_id is not None):
-            readable_period = get_range_printable(src_id.start_ts, src_id.end_ts, 3600)
-
         # Make sure the directory holding these results is there
-        analysis_dir_path = os.path.join(self.base_path, f"{readable_period} analysis")
+        analysis_dir_path = os.path.join(self.base_path, identifier.fs_str())
         if(not os.path.exists(analysis_dir_path)):
             os.mkdir(analysis_dir_path)
 

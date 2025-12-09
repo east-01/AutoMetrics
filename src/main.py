@@ -62,9 +62,6 @@ if(successes != config_checks):
 else:
     print(f"All configs valid.")
 
-if(prog_data.args.verifyconfig):
-    exit()
-
 print()
 
 analysis_order = get_analysis_order(prog_data)
@@ -73,12 +70,15 @@ analysis_order_printable = ", ".join([analysis.name for analysis in analysis_ord
 print()
 #endregion
 
-print(f"""### Loaded, starting...
+print(f"""### AutoTM Loaded:
         \rTimeline:
-        \r  {prog_data.timeline}
+        \r{prog_data.timeline}
         \rAnalyses:
         \r  {analysis_order_printable}
         \r""")
+
+if(prog_data.args.verifyconfig):
+    exit()
 
 #region Ingest
 print("### Ingesting data...")
