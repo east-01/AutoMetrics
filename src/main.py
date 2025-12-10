@@ -70,14 +70,16 @@ analysis_order_printable = ", ".join([analysis.name for analysis in analysis_ord
 print()
 #endregion
 
-print(f"""### AutoTM Loaded:
+print(f"""### Loaded:
         \rTimeline:
         \r{prog_data.timeline}
+        \r
         \rAnalyses:
         \r  {analysis_order_printable}
         \r""")
 
 if(prog_data.args.verifyconfig):
+    print(f"Config verified, --verify-config set, exiting.")
     exit()
 
 #region Ingest

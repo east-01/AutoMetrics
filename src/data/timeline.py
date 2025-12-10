@@ -71,26 +71,30 @@ class Timeline:
         for i in range(self.get_period_count()):
             period = self.get_period(i)
             start_ts, end_ts = period
-            sub_periods = self.get_sub_periods(i)  # unused, but left in case needed
+            sub_periods = self.get_sub_periods(i)
 
-            start_pos = int(ts_as_float(start_ts) * shell_width)
-            end_pos = int(ts_as_float(end_ts) * shell_width)
+            start_pos = round(ts_as_float(start_ts) * shell_width)
+            end_pos   = round(ts_as_float(end_ts)   * shell_width)
 
-            # Ensure ordered and clamped positions
             start_pos = max(min(start_pos, shell_width), 0)
-            end_pos   = max(min(end_pos, shell_width), start_pos + 1)
+            end_pos   = max(min(end_pos,   shell_width), start_pos + 1)
 
-            cell_width = max(end_pos - start_pos, 1)
+            cell_width = end_pos - start_pos
 
-            # First line: draw a block
-            firstline += "-" * (cell_width - 1)
+            block = ["-"] * (cell_width - 1)
+
+            # First line, blocks
+            for sub_start, sub_end in sub_periods:
+                sub_pos = round((ts_as_float(sub_start) * shell_width) - start_pos)
+                if 0 <= sub_pos < len(block):
+                    block[sub_pos] = "|"
+
+            firstline += "".join(block)
             firstline += "#"
 
-            # Second line: label the block
-            raw_label = get_range_printable(start_ts, end_ts)
-            raw_label = raw_label[: cell_width - 1]  # trim to fit
-
-            secondline += raw_label + " " * (cell_width - len(raw_label) - 1)
+            # Second line, labels
+            raw_label = get_range_printable(start_ts, end_ts)[: cell_width - 1]
+            secondline += raw_label + " " * (cell_width - len(raw_label))
 
         return firstline + "\n" + secondline
 
