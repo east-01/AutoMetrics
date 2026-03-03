@@ -20,6 +20,27 @@ def from_unix_ts_as_monthyear(timestamp):
     month_name = dt.strftime("%B")
     return f"{month_name} {dt.year}"
 
+def seconds_to_compact(seconds: int) -> str:
+    if seconds < 0:
+        raise ValueError("Seconds must be non-negative")
+
+    units = [
+        ("d", 86400),
+        ("h", 3600),
+        ("m", 60),
+        ("s", 1),
+    ]
+
+    parts = []
+    remaining = seconds
+
+    for suffix, unit_seconds in units:
+        value, remaining = divmod(remaining, unit_seconds)
+        if value > 0 or (suffix == "s" and not parts):
+            parts.append(f"{value}{suffix}")
+
+    return "".join(parts)
+
 def add_ordinal(n):
     if 11 <= n % 100 <= 13:
         return f"{n}th"
