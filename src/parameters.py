@@ -33,7 +33,7 @@ def load_arguments():
     Using the argparse library, parse the command line arguments into usable data.
     """
 
-    parser = argparse.ArgumentParser(prog='AutoTM', description='Auto Tide Metrics- Collect and visualize tide metrics')
+    parser = argparse.ArgumentParser(prog='AutoMetrics', description='AutoMetrics - collect, analyze, and save metrics through plugins')
     parser.add_argument("config", default="./config.yaml", type=str, help="The location of the config file to use.")
     parser.add_argument('-p', '--period', dest='period', type=parse_period_argument, help="A time range of the format <start>-<end> where your start and end times are UNIX timestamps.")
     parser.add_argument('-a', '--analyses', dest='analysis_options', type=lambda opt: opt.split(","), help="A list of analysis options separated by a comma (no spaces).")

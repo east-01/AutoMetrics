@@ -66,5 +66,3 @@ class EmailSaver(Saver):
                 server.send_message(msg)
 
         print(f"  Sent.")
-
-	def construct_message():

@@ -1,129 +1,113 @@
 # AutoMetrics
 
-A Python script that facilitates the process of collecting, analyzing, and visualizing data. Uses a plugin based system where new code can be dropped into the plugins folder to be used by itself or with other plugins. Has three phases: Ingesting data -> Analysing data -> Saving results; with plugins for each phase of the process.
+AutoMetrics is a Python CLI framework for metric pipelines built from plugins. It runs in three phases:
 
-If you're interested in writing your own plugins for AutoMetrics see the [Technical Details](https://github.com/east-01/AutoMetrics/blob/master/TechnicalDetails.md) document.
+1. ingest data into a shared repository
+2. run analyses and derived visualizations
+3. save the results
 
-This project was primarily developed along with [RCI Metrics](https://github.com/east-01/RCI-Metrics). See the repository for example configurations and plugin implementations.
+## Quickstart
 
-## Installation
+AutoMetrics needs Python 3.12+ and the packages in [`requirements.txt`](./requirements.txt).
 
-The installation instructions assume that you have:
-- Python 3.12.6 or later
-
-1. Clone the repository to your local directory with `git clone https://github.com/east-01/AutoMetrics.git`.
-2. Install the requirements with `pip install -r <path_to_repo>\requirements.txt`.
-3. After everything installs, AutoMetrics will be ready for use.
-
-## Plugins
-
-Plugins are automatically loaded from the `./plugins` directory. All python files will be searched, if any file contains a class (or multiple classes) that extends one of the plugins in `src/plugin_mgmt/plugins.py` that class will be loaded as it's plugin type.
-
-Plugins are the first thing that are loaded in the program, it will show a list of all loaded plugins- if something isn't working check if all of your plugins are there.
-
-Ensure your plugins are configured properly, see [configurable plugins](#configurable-plugins) for details.
-
-## Usage
-
-AutoMetrics is run from the command line, the base version can be run with:
-
-```
-python src/main.py <configuration>
+```bash
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
 ```
 
-Where \<configuration\> is the .yaml configuration file that specifies how AutoMetrics will run. See [Configurations](#configurations) for details.
+If you are on Windows PowerShell, activate the environment with `.\venv\Scripts\Activate.ps1`.
 
-The base version doesn't do much. Install [plugins](#plugins) to get advanced functionality.
+Check the CLI:
 
-### Configurations
-
-The configuration is a .yaml file specifying how AutoMetrics will run. They're set up so you can create multiple .yaml files, one for each computation you'd like. For example, the [RCI Metrics](https://github.com/east-01/RCI-Metrics) project has a "monthly.yaml" configuration and a "tidesplit.yaml" configuration covering two groups of analyses.
-
-The configuration has two main sections: 
-1. The runtime config section that specifies what plugins and analyses will be used. 
-2. The plugin-specific config section that passes configuration through to the plugins.
-
-#### Runtime configuration
-
-Here is an example of the runtime configuration:
-
+```bash
+python src/main.py --help
 ```
-period: MonthYR
+
+Validate a config without running the ingest, analysis, and save phases:
+
+```bash
+python src/main.py ./configs/monthly.yaml --verify-config
+```
+
+This repo ships the AutoMetrics runtime, plugin loader, base classes, and a handful of built-in helpers. The real ingest logic and the real domain-specific analyses are expected to come from plugins. In practice, base AutoMetrics is intentionally barebones: without plugins, there is very little useful analysis to run.
+
+Most included configs expect project-specific plugins in [`plugins/`](./plugins) such as `PromQLIngestController`, so `--verify-config` is the safest first run until your plugin set is installed.
+
+Run a config for real once the required plugins are present:
+
+```bash
+python src/main.py ./configs/monthly.yaml
+```
+
+## Typical Workflow
+
+1. Put custom plugin files under [`plugins/`](./plugins).
+2. Pick or create a YAML config under [`configs/`](./configs).
+3. Run `--verify-config` to confirm plugin loading and config sections.
+4. Run the config, optionally overriding `period`, `analyses`, or `exit-action` on the CLI.
+5. Inspect outputs under the configured `saving.base-path`, usually somewhere under [`io/`](./io).
+
+## Configuration Overview
+
+Required top-level runtime sections:
+
+```yaml
+period: lastmonth
+timeline:
+  align: month
+  sub_period_max_len: 302400
 ingest:
   run:
-    - <Ingest>
+    - IngestPluginName
 analysis:
   run:
-    - <Analysis>
+    - analysis_name
 saving:
-  base-path: "./latest"
+  base-path: "./io/latest"
+  exit-action: none
   run:
-    - <Saver>
+    - SaverPluginName
 ```
 
-**period**: _Can be overridden in arguments._ The period specifies the start-timestamp and end-timestamp range for the configuration to run over. Arguments will be unpacked according to the following formats/keywords, then returned as a tuple with the format `(start_ts, end_ts)`.
+Plugin-specific configuration lives in additional top-level sections keyed by class name:
 
-_Note_: You shouldn't use a single unix timestamp by itself as it will lead to a range where the start and end times are equal.
-
-Format | Example | Timestamp result
--------|---------|-----------------
-Year | `2024` | (January 1st 2024 00:00, December 31st 2024 23:59)
-MonthYear | `January25` | (January 1st 2025 00:00, January 31st 2025 23:59)
-Unix timestamp | `1738396800` | (1738396800, 1738396800)
-
-Keyword | Timestamp result
---------|--------
-`now` | (Current timestamp, Current timestamp)
-`yesterday` | (Yesterday's date 00:00, Yesterday's date 23:59)
-`lastweek` | (Last week Sunday 00:00, Last week Saturday 23:59)
-`lastmonth` | (Last month 1st 00:00, Last day of the month 23:59)
-`ytd` | (January 1st 00:00, Current timestamp)
-
-You can create more advanced periods with ranged arguments, they take the format: `<range_start>-<range_end>` (the '-' is _requierd_). `range_start` and `range_end` will be parsed according to the above formats/keywords, then (range_start.start_ts, range_end.end_ts) will be returned. A couple examples to illustrate this idea:
-
-Example | Goal | Timestamp result
---------|------|------------------
-`January25-March25` | Run from January to March. | (January 1st 2025 00:00, March 31st 2025 23:59)
-`June24-June25` | Run for a year, but we want to start at the middle of the year. | (June 1st 2024 00:00, June 30th 2025: 23:59)
-`2024-1760511600` | Run from the start of 2024 to this specific timestamp (October 15th, 2025) | (January 1st 2024 00:00, October 15th 2025 00:00)
-`yesterday-now` | Run from the start of yesterday until now | (Yesterday's date 00:00, Current timestamp)
-
-**ingest**: Has a single sub-section, run, which is a list of IngestPlugins to run. See [Plugins](#plugins) for details.
-
-**analysis**: _Can be overridden in arguments._ Has a single sub-section, run, which is a list of Analyses to perform. See [Plugins](#plugins) for details.
-
-**saving**: 
-- **base-path**: Specifies the base path for all files to be saved to; Saver plugins also have an "addtl-base" section, meaning a filepath for a specific Saver plugin can look like `<base-path>/<addtl-base>/`.
-- **exit-action**: _Can be overridden in arguments._ The action to take once AutoMetrics finishes running. Options are: `[none, openeach, opendir]`. `openeach` opens each file individually, `opendir` opens the directory.
-- **run**: A list of Saver plugins to run. See [Plugins](#plugins) for details.
-
-#### Configurable plugins
-
-IngestPlugins, AnalysisDriverPlugins, and Saver plugins all are configurable, meaning config you specify in this section will be passed through to those plugins through the config_section dictionary variable when it is run.
-
-To specify configuration for a specific plugin, you must specify the plugin name as the top level section, then any plugin-specific config can go under that section. Plugins should have readme documentation for their plugins' special configurations.
-
-An example plugin specific config from [RCI Metrics](https://github.com/east-01/RCI-Metrics):
-```
+```yaml
 PromQLIngestController:
-  main-periods: false
   query-cfgs:
     - monthly
 ```
 
-### Command line arguments
+See the full references in [`docs/configuration.md`](./docs/configuration.md) and [`docs/cli.md`](./docs/cli.md).
 
-Command line arguments are for quick overrides of configuration parameters. The base command:
+## Built-In Capabilities
 
-```
-python src/main.py <configuration>
-```
+AutoMetrics includes:
 
-Argument | Description | Example usage
----------|-------------|--------------
-configuration | The path to the .yaml configuration file for the program. | "./configs/monthly.yaml"
--p/--period | Override the period parameter in the configuration. See [Runtime configuration](#runtime-configuration) for details. | -p January25
--a/--analyses | Override the analysis run list in the configuration, takes a list of analysis names separated by a comma with no spaces. | -a viscpuhours,summary 
--v | Verbose messaging in the console. | -v
---verify-config | Don't run the entire program, just load plugins and check if the configuration is valid. | --verify-config
---exit-action | The action to take once AutoMetrics finishes running. Options are: `[none, openeach, opendir]` | --exit-action openeach
+- plugin base classes and the runtime loader
+- timeline ingestion
+- analysis drivers for simple, meta, aggregate, verification, and visualization workflows
+- savers for analysis files, visualization PNGs, and email delivery
+
+The important constraint is that this base repository is mostly infrastructure for plugins. What it does not include by default is your project-specific ingest logic, your concrete analysis definitions, or your project’s output conventions. Those usually live in [`plugins/`](./plugins) or in a companion repo, and they are what make an AutoMetrics deployment actually useful.
+
+See [`docs/builtins.md`](./docs/builtins.md).
+
+## Writing Plugins
+
+AutoMetrics discovers Python files under `./plugins` recursively. Any class that subclasses one of the supported plugin base classes will be loaded automatically.
+
+Start with:
+
+- [`docs/plugins.md`](./docs/plugins.md) for practical plugin examples
+- [`TechnicalDetails.md`](./TechnicalDetails.md) for architecture details
+- [`plugins/README.md`](./plugins/README.md) for local plugin folder conventions
+
+## Documentation Map
+
+- [`docs/configuration.md`](./docs/configuration.md): YAML structure and key reference
+- [`docs/cli.md`](./docs/cli.md): CLI flags and examples
+- [`docs/plugins.md`](./docs/plugins.md): plugin loading rules and minimal examples
+- [`docs/builtins.md`](./docs/builtins.md): built-in plugins and outputs
+- [`docs/troubleshooting.md`](./docs/troubleshooting.md): common failures and what to check
+- [`TechnicalDetails.md`](./TechnicalDetails.md): deeper architecture notes
