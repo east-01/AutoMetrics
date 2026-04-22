@@ -30,6 +30,12 @@ Validate a config without running the ingest, analysis, and save phases:
 python src/main.py ./configs/monthly.yaml --verify-config
 ```
 
+To verify the runtime and plugin loading without running any ingest plugins, analyses, or savers, use the empty example config:
+
+```bash
+python src/main.py ./example_config.yaml --verify-config
+```
+
 This repo ships the AutoMetrics runtime, plugin loader, base classes, and a handful of built-in helpers. The real ingest logic and the real domain-specific analyses are expected to come from plugins. In practice, base AutoMetrics is intentionally barebones: without plugins, there is very little useful analysis to run.
 
 Most included configs expect project-specific plugins in [`plugins/`](./plugins) such as `PromQLIngestController`, so `--verify-config` is the safest first run until your plugin set is installed.

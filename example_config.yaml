@@ -1,0 +1,12 @@
+# Empty runtime config example.
+#
+# This keeps the required runtime sections but runs no ingest plugins,
+# no analyses, and no savers.
+period: yesterday
+ingest:
+  run: []
+analysis:
+  run: []
+saving:
+  exit-action: none
+  run: []
