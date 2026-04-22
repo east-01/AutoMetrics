@@ -16,6 +16,14 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
+If you want to use conda, you can use the following command
+
+```bash
+source activate base
+conda env create -f environment.yml
+conda activate autotm-env
+```
+
 If you are on Windows PowerShell, activate the environment with `.\venv\Scripts\Activate.ps1`.
 
 Check the CLI:
