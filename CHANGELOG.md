@@ -5,10 +5,18 @@ All notable changes to **AutoMetrics** will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),  
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [X.X.X] - Unreleased
-### TODO
-- Tests overhaul
-- Add JupyterHub per-user hours
+## [2.1.0] - 2026-04-29
+### Added
+- Support for the `now` period keyword in configuration and CLI period parsing.
+- Built-in reference docs for configuration, CLI usage, plugin authoring, bundled plugins, and troubleshooting.
+- Refreshed architecture documentation describing the plugin runtime, identifiers, `DataRepository`, and analysis-driver model.
+
+### Changed
+- Rewrote the README around the current plugin-first workflow, including `--verify-config`, runtime overrides, and the fact that many sample configs depend on external plugins.
+- Expanded the docs to reflect the current runtime surface area, including bundled timeline ingest, verification, visualization, and saver behaviors.
+
+### Fixed
+- Aligned the documented period keywords with the parser implementation.
 
 ## [2.0.3] - 2025-10-28
 ### Added

@@ -66,13 +66,6 @@ AnalysisSaver:
 - Saves generated matplotlib figures as `.png`
 - Config: default saver config only, including optional `addtl-base`
 
-`EmailSaver`
-
-- Zips the output directory and emails it
-- Current state: implementation is hard-coded and not production-ready
-- Config verification is not implemented
-- Treat as a project-specific starting point rather than a polished built-in
-
 ## Output Locations
 
 The effective output directory starts with `saving.base-path`.
@@ -90,7 +83,6 @@ Typical output patterns:
 
 - `AnalysisSaver`: CSV files plus `text_results.txt`
 - `VizualizationsSaver`: PNG files
-- `EmailSaver`: a zip file written next to the base output directory before sending
 
 ## Important Limitation
 

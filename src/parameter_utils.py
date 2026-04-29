@@ -53,6 +53,10 @@ def parse_keywords(period_arg):
     now = datetime.now(ZoneInfo("America/Los_Angeles"))
 
     match(period_arg):
+        case "now":
+            current_second = now.replace(microsecond=0)
+            current_timestamp = int(current_second.timestamp())
+            return current_timestamp, current_timestamp
         case "yesterday":
             start_of_today = now.replace(hour=0, minute=0, second=0, microsecond=0)
             start_of_yesterday = start_of_today - timedelta(days=1)
@@ -112,7 +116,7 @@ def parse_single_period_arg(period_arg, allow_timestamp=False):
     """ Parse a string argument as a time range. Can accept multiple formats:
             Single year: 2024
             Single month/year: January25
-            Keyword: lastweek, lastmonth, yeartodate
+            Keyword: now, yesterday, lastweek, lastmonth, ytd
             Timestamp (if allow_timestamp=True): 1735718400
                 - This is for use with ranged arguments, allow_timestamp should normally be false.
     """

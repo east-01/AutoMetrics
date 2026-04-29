@@ -1,5 +1,6 @@
 import shutil
 import smtplib
+import warnings
 from email.message import EmailMessage
 import os
 from pathlib import Path
@@ -12,6 +13,13 @@ from src.plugin_mgmt.plugins import Saver
 from src.program_data import ProgramData
 from src.utils.config_checker import verify_sections_exist
 from src.utils.timeutils import from_unix_ts, seconds_to_compact
+
+warnings.warn(
+    "EmailSaver is deprecated and should not be used from the master branch. "
+    "Move it to a project-specific plugin before enabling it again.",
+    DeprecationWarning,
+    stacklevel=2,
+)
 
 class EmailSaver(Saver):
     """ Will zip the output directory and attach it to an email to be sent to the destination
