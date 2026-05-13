@@ -15,6 +15,7 @@ python -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 ```
+If you are on Windows PowerShell, activate the environment with `.\venv\Scripts\Activate.ps1`.
 
 If you want to use conda, you can use the following command
 
@@ -23,8 +24,6 @@ source activate base
 conda env create -f environment.yml
 conda activate autotm-env
 ```
-
-If you are on Windows PowerShell, activate the environment with `.\venv\Scripts\Activate.ps1`.
 
 Check the CLI:
 
@@ -56,7 +55,7 @@ python src/main.py ./configs/monthly.yaml
 
 ## Typical Workflow
 
-1. Put custom plugin files under [`plugins/`](./plugins).
+1. Put custom plugin files under [`plugins/`](./plugins). An example of a plugin is here: [rci-metrics plugin](https://github.com/SDSU-Research-CI/RCI-Metrics)
 2. Pick or create a YAML config under [`configs/`](./configs).
 3. Run `--verify-config` to confirm plugin loading and config sections.
 4. Run the config, optionally overriding `period`, `analyses`, or `exit-action` on the CLI.
